@@ -4,23 +4,37 @@ Created on Mon May 30 13:02:29 2022
 
 @author: yusai
 """
-import requests
+
 import websocket
 
-f = open("C:\\Users\\yusai\\Documents\\test.csv",'w')
-   
-if __name__ == "__main__":
-    rest_url = "https://www.okx.com/"
-    rest_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=BTC-USD"
-    response = requests.get(rest_url+rest_reqmsg)
-    strargs="[{\"channel\":\"tickers\",\"instId\":\"BTC-USDT\"}]";
+__FeedReceiver = websocket.WebSocket()
+__url=""
+
+def SetParam(url):
+    __url = url
+    
+def Connect(url):
+    __url = url
+    __FeedReceiver.connect(__url)
+
+def Subscribe(msg):
+    __FeedReceiver.send(msg)
+    
+def StartListenTicker(InsList):
+    strargs="["
+    for ins in InsList:
+        strargs += "{\"channel\":\"tickers\",\"instId\":\"" + ins + "\"},"
+    strargs=strargs[0:len(strargs)-1] + "]"
     reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
-    url = "wss://ws.okx.com:8443/ws/v5/public"
-    ws = websocket.WebSocket()
-    ws.connect(url)
-    ws.send(reqmsg)
-    i = 0
-    while i < 1:
-        f.write(ws.recv() + "\n")
-        f.flush()
-        print(ws.recv())
+    Subscribe(reqmsg)
+    
+def StartListenOrderBook(InsList,depth):
+    strargs="["
+    for ins in InsList:
+        strargs += "{\"channel\":\"books\",\"instId\":\"" + ins + "\",\"sz\":\"" + str(depth) + "\"},"
+    strargs=strargs[0:len(strargs)-1] + "]"
+    reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
+    Subscribe(reqmsg)
+    
+def recv():
+    return __FeedReceiver.recv()
