@@ -9,7 +9,7 @@ import OKExOMS
 
 url = "wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999"
 apikey = "8af2e318-bec8-46e3-a394-187795d3e537"
-passphrase = "1G05q080-9"
+passphrase = ""
 secretKey = "9E2115F70CBD9CD806FD7E8AF360C16D"
 
 OKExOMS.SetURL(url)
