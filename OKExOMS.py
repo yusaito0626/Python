@@ -11,8 +11,6 @@ import time
 import hmac
 import hashlib
 import base64
-import requests
-import json
 import queue
 import threading
 

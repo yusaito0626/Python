@@ -13,6 +13,19 @@ class AckSubscribe:
     uly = ""
     instId = ""
     ccy = ""
+    
+    def __init__(self):
+        self.subtype = OKExEnums.subscribeType.NONE
+        self.channel = ""
+        self.insType = OKExEnums.instType.NONE
+        self.uly = ""
+        self.instId = ""
+        self.ccy = ""
+        
+class pushData:
+    arg = {}
+    data = []
+    
 
 ### Trade ###
 
@@ -70,10 +83,11 @@ class dataAccDetail:
     ordFrozen = 0.0
     liab = 0.0
     upl = 0.0
+    uolLiab = 0.0
     crossLiab = 0.0
     isoLiab = 0.0
     mgnRatio = 0.0
-    interst = 0.0
+    interest = 0.0
     twap = 0.0
     maxLoan = 0.0
     eqUsd = 0.0
@@ -446,3 +460,189 @@ class dataGridSubOrders:
     pTime = 0.0
     
 ### Public Channel ###
+
+class dataInstrument:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    uly = ""
+    category = 0
+    baceCcy = ""
+    quoteCcy = ""
+    settleCcy = ""
+    ctVal = 0.0
+    ctMulti = 0.0
+    ctValCcy = ""
+    optType = OKExEnums.optType.NONE
+    stk = 0.0
+    listTime = 0
+    expTime = 0
+    lever = 0.0
+    tickSz = 0.0
+    lotSz = 0.0
+    minSz = 0.0
+    ctType = OKExEnums.ctType.NONE
+    alias = ""
+    state = OKExEnums.insState.NONE
+    maxLmtSz = 0.0
+    maxMktSz = 0.0
+    maxTwapSz = 0.0
+    maxIcebergSz = 0.0
+    maxTriggerSz = 0.0
+    maxStopSz = 0.0
+    
+class dataTicker:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    last = 0.0
+    lastSz = 0.0
+    askPx = 0.0
+    askSz = 0.0
+    bidPx = 0.0
+    bidSz = 0.0
+    open24h = 0.0
+    high24h = 0.0
+    low24h = 0.0
+    volCcy24h = 0.0
+    vol24h = 0.0
+    sodUtc0 = 0.0
+    sodUtc8 = 0.0
+    ts = 0
+    
+class dataOpenInterest:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    oi = 0.0
+    oiCcy = ""
+    ts = 0
+    
+class dataCandleStick:
+    ts = 0
+    o = 0.0
+    h = 0.0
+    l = 0.0
+    c = 0.0
+    vol = 0.0
+    volCcy = 0.0
+    
+class dataTrade:
+    instId = ""
+    tradeId = ""
+    px = 0.0
+    sz = 0.0
+    side = OKExEnums.side.NONE
+    ts = 0
+    
+class dataEstimatedDelivery:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    settlePx = 0.0
+    ts = 0
+    
+class dataMarkPrice:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    markPx = 0.0
+    ts = 0
+    
+class dataMarkPxCandleStick:
+    ts = 0
+    o = 0.0
+    h = 0.0
+    l = 0.0
+    c = 0.0
+    
+class dataPriceLimit:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    buyLmt = 0.0
+    sellLmt = 0.0
+    ts = 0
+    
+class book:
+    px = 0.0
+    qty = 0.0
+    LiqOrd = 0.0
+    NumOfOrd = 0
+    
+class dataOrderBook:
+    asks = []#List of book
+    bids = []#List of book
+    ts = 0
+    checksum = 0
+    
+class dataOptionSummary:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    uly = ""
+    delta = 0.0
+    gamma = 0.0
+    vega = 0.0
+    theta = 0.0
+    lever = 0.0
+    markVol = 0.0
+    bidVol = 0.0
+    askVol = 0.0
+    realVol = 0.0
+    fwdPx = 0.0
+    ts = 0
+    
+class dataFundingRate:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    fundingRate = 0.0
+    nextFundingRate = 0.0
+    fundingTime = 0
+    
+class dataIndexCandleStick:
+    ts = 0
+    o = 0.0
+    h = 0.0
+    l = 0.0
+    c = 0.0
+    
+class dataIndexTicker:
+    instId = ""
+    idxPx = 0.0
+    open24h = 0.0
+    high24h = 0.0
+    low24h = 0.0
+    sodUtc0 = 0.0
+    sodUtc8 = 0.0
+    ts = 0
+    
+class dataStatus:
+    title = ""
+    state = OKExEnums.sysStatus.NONE
+    begin = 0
+    end = 0
+    href = ""
+    serviceType = OKExEnums.serviceType.NONE
+    system = ""
+    scheDesc = ""
+    ts = 0
+    
+class blkTdLeg:
+    instId = ""
+    px = 0.0
+    sz = 0.0
+    side = OKExEnums.side.NONE
+    tradeId = ""
+    
+class dataPblStrBlkTd:
+    cTime = 0
+    blockTdId = ""
+    legs = []#List of blkTdLeg
+    
+class dataBlkTicker:
+    instType = OKExEnums.instType.NONE
+    instId = ""
+    volCcy24h = 0.0
+    vol24h = 0.0
+    ts = 0
+    
+    
+    
+    
+    
+    
+    

@@ -157,3 +157,36 @@ class subOrderState(Enum):
     FILLED = 4
     CANCELLING = 5
     
+class optType(Enum):
+    NONE = 0
+    CALL = 1
+    PUT = 2
+    
+class ctType(Enum):
+    NONE = 0
+    LINEAR = 1
+    INVERSE = 2
+    
+class insState(Enum):
+    NONE = 0
+    LIVE = 1
+    SUSPEND = 2
+    EXPIRED = 3
+    PREOPEN = 4
+    SETTLEMENT = 5
+    
+class sysStatus(Enum):
+    NONE = 0
+    SCHEDULED = 1
+    ONGOING = 2
+    COMPLETED = 3
+    CANCELED = 4
+    
+class serviceType(Enum):
+    NONE = -1
+    WEBSOCKET = 0
+    SPOTMERGIN = 1
+    FUTURES = 2
+    PERPETUAL = 3
+    OPTIONS = 4
+    TRADING = 5
