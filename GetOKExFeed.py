@@ -9,11 +9,10 @@ import sys
 sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
 import OKExFeedReceiver
 import requests
-import json
-import pandas
+import datetime
 
-if __name__ == "__main__":    
-    f = open("C:\\Users\\yusai\\Documents\\test.csv",'w')
+if __name__ == "__main__":
+    datapath = "D:\\OKExFeed\\"
     url = "wss://ws.okx.com:8443/ws/v5/public"
     
     
@@ -31,17 +30,43 @@ if __name__ == "__main__":
     for elem in obj['data']:
         insList.append(elem['instId'])
         
-    OKExFeedReceiver.Connect(url)
-    OKExFeedReceiver.StartListenOrderBook(insList,10)
+    feedReceiver = OKExFeedReceiver.FeedReceiver()
+    feedReceiver.Initialize()
+    
+    feedReceiver.Connect(url)
+    feedReceiver.StartListenOrderBook(insList,10)
+    today = datetime.datetime.utcnow()
+    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
+    f = open(filename,'w')
+    currentDay = today.day
+    currentMin = today.minute
+    
+    print("Start Collecting Data From OKEx.")
+    print("Start:" + today.isoformat())
+    print("Instrument List:")
+    for ins in insList:
+        print(ins)
+    
     i = 0
-    while i < 101:
-        txt = OKExFeedReceiver.recv()
-        f.write(txt + "\n")
-        #f.flush()
-        #print(txt)
-        if(i == 100):
-            print(txt)
-            i = 0
-        else:
-            i += 1
+    while True:
+        txt = feedReceiver.recv()
+        if(txt != ""):
+            f.write(txt + "\n")
+            today = datetime.datetime.utcnow()
+            if(today.hour == 8 and currentDay != today.day):
+                f.flush()
+                f.close()
+                if(today.weekday()==6):
+                    print("Process Ending...")
+                    break
+                else:
+                    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
+                    print("Changing File. New File:")
+                    print(filename)
+                    f = open(filename(),'w')
+                    currentDay = today.day
+            elif(currentMin != today.minute):
+                currentMin = today.minute
+                print(today.isoformat())
+
         
