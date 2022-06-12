@@ -56,17 +56,19 @@ if __name__ == "__main__":
             if(today.hour == 8 and currentDay != today.day):
                 f.flush()
                 f.close()
-                if(today.weekday()==6):
-                    print("Process Ending...")
-                    break
-                else:
-                    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
-                    print("Changing File. New File:")
-                    print(filename)
-                    f = open(filename(),'w')
-                    currentDay = today.day
+                print("Process Ending...")
+                break
+                #if(today.weekday()==6):
+                #    print("Process Ending...")
+                #    break
+                #else:
+                #    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
+                #    print("Changing File. New File:")
+                #    print(filename)
+                #    f = open(filename(),'w')
+                #    currentDay = today.day
             elif(currentMin != today.minute):
                 currentMin = today.minute
                 print(today.isoformat())
-
+    sys.exit()
         
