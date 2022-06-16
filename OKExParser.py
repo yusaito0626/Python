@@ -63,6 +63,7 @@ def ParseEvent(msg):
         return data
     elif(data["event"]=="error"):
         return data
+    
 def ParsePushData(msg):
     js = json.loads(msg)
     pData = OKExMessage.pushData()
@@ -108,69 +109,118 @@ def ParsePushData(msg):
                 out.details.append(detail)
             pData.data.append(out)
         return pData
-    elif(data["arg"]["channel"]=="positions"):
-        out = OKExMessage.dataPosition()
+    elif(js["arg"]["channel"]=="positions"):
         
-    elif(data["arg"]["channel"]=="balance_and_position"):
-
-    elif(data["arg"]["channel"]=="orders"):
-
-    elif(data["arg"]["channel"]=="orders-algo"):
-
-    elif(data["arg"]["channel"]=="algo-advance"):
-
-    elif(data["arg"]["channel"]=="liquidation-warning"):
-
-    elif(data["arg"]["channel"]=="account-greeks"):
-
-    elif(data["arg"]["channel"]=="rfqs"):
-
-    elif(data["arg"]["channel"]=="quotes"):
-
-    elif(data["arg"]["channel"]=="struc-block-trades"):
-
-    elif(data["arg"]["channel"]=="grid-orders-spot"):
-
-    elif(data["arg"]["channel"]=="grid-orders-contraact"):
-
-    elif(data["arg"]["channel"]=="grid-positions"):
-
-    elif(data["arg"]["channel"]=="grid-sub-orders"):
-
-    elif(data["arg"]["channel"]=="instruments"):
-
-    elif(data["arg"]["channel"]=="tickers"):
-
-    elif(data["arg"]["channel"]=="open-interest"):
-
-    elif(data["arg"]["channel"][0:5]=="candle"):
-
-    elif(data["arg"]["channel"]=="trades"):
-
-    elif(data["arg"]["channel"]=="estimated-price"):
-
-    elif(data["arg"]["channel"]=="mark-price"):
-
-    elif(data["arg"]["channel"][0:15]=="mark-price-candle"):
-
-    elif(data["arg"]["channel"]=="price-limit"):
-
-    elif(data["arg"]["channel"][0:4]=="books"):
-
-    elif(data["arg"]["channel"]=="opt-summary"):
-
-    elif(data["arg"]["channel"]=="funding-rate"):
-
-    elif(data["arg"]["channel"][0:11]=="index-candle"):
-
-    elif(data["arg"]["channel"]=="index-tickers"):
-
-    elif(data["arg"]["channel"]=="status"):
-
-    elif(data["arg"]["channel"]=="public-struc-block-trades"):
-
-    elif(data["arg"]["channel"]=="block-tickers"):
+        return pData
+    elif(js["arg"]["channel"]=="balance_and_position"):
         
+        return pData
+    elif(js["arg"]["channel"]=="orders"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="orders-algo"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="algo-advance"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="liquidation-warning"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="account-greeks"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="rfqs"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="quotes"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="struc-block-trades"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="grid-orders-spot"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="grid-orders-contraact"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="grid-positions"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="grid-sub-orders"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="instruments"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="tickers"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="open-interest"):
+        
+        return pData
+    elif(js["arg"]["channel"][0:5]=="candle"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="trades"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="estimated-price"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="mark-price"):
+        
+        return pData
+    elif(js["arg"]["channel"][0:15]=="mark-price-candle"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="price-limit"):
+        
+        return pData
+    elif(js["arg"]["channel"][0:4]=="books"):
+        pData.arg["action"] = data["action"]#snapshot or update
+        for data in js["data"]:#data contains asks,bids,ts,checksum
+            ordbook = OKExMessage.dataOrderBook()
+            ordbook.ts = int(data["ts"])
+            ordbook.checksum = int(data["checksum"])
+            for a in js["asks"]:
+                bk = OKExMessage.book()
+                bk.px = float(a[0])
+                bk.qty = float(a[1])
+                bk.LiqOrd = float(a[2])
+                bk.NumOfOrd = int(a[3])
+                ordbook.asks.append(bk)
+            for b in js["bids"]:
+                bk = OKExMessage.book()
+                bk.px = float(b[0])
+                bk.qty = float(b[1])
+                bk.LiqOrd = float(b[2])
+                bk.NumOfOrd = int(b[3])
+                ordbook.bids.append(bk)
+            pData.data.append(ordbook)
+        return pData
+    elif(js["arg"]["channel"]=="opt-summary"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="funding-rate"):
+        
+        return pData
+    elif(js["arg"]["channel"][0:11]=="index-candle"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="index-tickers"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="status"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="public-struc-block-trades"):
+        
+        return pData
+    elif(js["arg"]["channel"]=="block-tickers"):
+
+        return pData        
 
 def Parse(msg):
     idx = msg.find("\"op\"")

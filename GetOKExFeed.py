@@ -10,6 +10,7 @@ sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
 import OKExFeedReceiver
 import requests
 import datetime
+import time
 
 if __name__ == "__main__":
     datapath = "D:\\OKExFeed\\"
@@ -33,42 +34,56 @@ if __name__ == "__main__":
     feedReceiver = OKExFeedReceiver.FeedReceiver()
     feedReceiver.Initialize()
     
-    feedReceiver.Connect(url)
-    feedReceiver.StartListenOrderBook(insList,10)
     today = datetime.datetime.utcnow()
     filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
     f = open(filename,'w')
-    currentDay = today.day
-    currentMin = today.minute
     
-    print("Start Collecting Data From OKEx.")
-    print("Start:" + today.isoformat())
-    print("Instrument List:")
-    for ins in insList:
-        print(ins)
+    trials = 1
     
-    i = 0
-    while True:
-        txt = feedReceiver.recv()
-        if(txt != ""):
-            f.write(txt + "\n")
-            today = datetime.datetime.utcnow()
-            if(today.hour == 8 and currentDay != today.day):
-                f.flush()
-                f.close()
-                print("Process Ending...")
+    while(trials < 11):
+        try:
+            feedReceiver.Connect(url)
+            print("Connection establised.")
+            feedReceiver.StartListenOrderBook(insList)
+            feedReceiver.StartListenTrade(insList)
+            currentDay = today.day
+            currentMin = today.minute
+    
+            print("Start Collecting Data From OKEx. Attempts:" + str(trials))
+            print("Start:" + today.isoformat())
+            print("Instrument List:")
+            for ins in insList:
+                print(ins)
+            
+            while True:
+                txt = feedReceiver.recv()
+                if(txt != ""):
+                    if(txt=="ERROR"):
+                        raise Exception("Error while receiving feed.")
+                    f.write(txt + "\n")
+                    today = datetime.datetime.utcnow()
+                    if(today.hour == 8 and currentDay != today.day):
+                        f.flush()
+                        f.close()
+                        trials = 99
+                        break
+                    elif(currentMin != today.minute):
+                        currentMin = today.minute
+                        print(today.isoformat())
+        except:
+            feedReceiver.Disconnect()
+            if(trials > 10):
+                print("Exception Thrown.")
+                print("The number of attempts exceeded 10 times.")
                 break
-                #if(today.weekday()==6):
-                #    print("Process Ending...")
-                #    break
-                #else:
-                #    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
-                #    print("Changing File. New File:")
-                #    print(filename)
-                #    f = open(filename(),'w')
-                #    currentDay = today.day
-            elif(currentMin != today.minute):
-                currentMin = today.minute
-                print(today.isoformat())
+            print("Exception Thrown. Reconnecting in 5min.")
+            time.sleep(300)
+            print("Reconnecting...")
+            trials += 1
+            today = datetime.datetime.utcnow()
+        
+        
+    print("Process Ending...")
+    feedReceiver.Disconnect()
     sys.exit()
         

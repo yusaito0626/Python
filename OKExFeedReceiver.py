@@ -17,13 +17,20 @@ class FeedReceiver:
     feedQueue = queue.Queue()
     
     def ListeningFeed(self):
-        while True:
-            msg = self.__FeedReceiver.recv()
-            if(msg==""):#websocket has been closed
-                self.isListening = False
-                break
-            else:
-                self.feedQueue.put(msg)
+        print("ListeningFeed Thread started.")
+        try:
+            while True:
+                msg = self.__FeedReceiver.recv()
+                if(msg==""):#websocket has been closed
+                    print("Connection Closed.")
+                    self.isListening = False
+                    break
+                else:
+                    self.feedQueue.put(msg)
+        except:
+            print("Error Occured. Return ERROR text.")
+            self.feedQueue.put("ERROR")
+            self.isListening = False
     
     def Initialize(self):
         self.ListeningFeedTh = threading.Thread(target=self.ListeningFeed,args=())
@@ -50,10 +57,21 @@ class FeedReceiver:
             self.ListeningFeedTh.start()
             
     
-    def StartListenOrderBook(self,InsList,depth):
+    def StartListenOrderBook(self,InsList):
         strargs="["
         for ins in InsList:
-            strargs += "{\"channel\":\"books\",\"instId\":\"" + ins + "\",\"sz\":\"" + str(depth) + "\"},"
+            strargs += "{\"channel\":\"books\",\"instId\":\"" + ins + "\"},"
+        strargs=strargs[0:len(strargs)-1] + "]"
+        reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
+        self.Subscribe(reqmsg)
+        if(self.isListening == False):
+            self.isListening = True
+            self.ListeningFeedTh.start()
+    
+    def StartListenTrade(self,InsList):
+        strargs="["
+        for ins in InsList:
+            strargs += "{\"channel\":\"trades\",\"instId\":\"" + ins + "\"},"
         strargs=strargs[0:len(strargs)-1] + "]"
         reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
         self.Subscribe(reqmsg)
@@ -66,3 +84,7 @@ class FeedReceiver:
             return ""
         else:
             return self.feedQueue.get()
+        
+    def Disconnect(self):
+        self.__FeedReceiver.close()
+        self.__FeedReceiver = websocket.WebSocket()
