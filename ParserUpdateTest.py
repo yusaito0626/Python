@@ -9,9 +9,7 @@ Created on Thu Jun 16 19:46:08 2022
 import sys
 sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
 
-import OKExEnums
 import OKExParser
-import OKExMessage
 import OKExInstrument
 
 
@@ -27,6 +25,35 @@ books.priceUnit = 10
 books.initializeBoard(parsedData, 400)
 print(books.ToString())
 out.write(books.ToString())
+out.write("\n")
+
+up = f.readline()
+updateData = OKExParser.Parse(up)
+books.updateBooks(updateData)
+print(books.ToString())
+out.write(books.ToString())
+out.write("\n")
+
+up = f.readline()
+updateData = OKExParser.Parse(up)
+books.updateBooks(updateData)
+print(books.ToString())
+out.write(books.ToString())
+out.write("\n")
+
+up = f.readline()
+updateData = OKExParser.Parse(up)
+books.updateBooks(updateData)
+print(books.ToString())
+out.write(books.ToString())
+out.write("\n")
+
+up = f.readline()
+updateData = OKExParser.Parse(up)
+books.updateBooks(updateData)
+print(books.ToString())
+out.write(books.ToString())
+out.write("\n")
 
 up = f.readline()
 updateData = OKExParser.Parse(up)
