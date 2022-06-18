@@ -30,6 +30,20 @@ if __name__ == "__main__":
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
+    
+    #Add ETH
+    insList.append("ETH-USDT")
+    rest_url = "https://www.okx.com/"
+    fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=ETH-USD"
+    response = requests.get(rest_url+fut_reqmsg)
+    obj=response.json()
+    for elem in obj['data']:
+        insList.append(elem['instId'])
+    swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=ETH-USD"
+    response = requests.get(rest_url+swap_reqmsg)
+    obj=response.json()
+    for elem in obj['data']:
+        insList.append(elem['instId'])
         
     feedReceiver = OKExFeedReceiver.FeedReceiver()
     feedReceiver.Initialize()

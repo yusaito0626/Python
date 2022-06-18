@@ -65,9 +65,11 @@ def ParseEvent(msg):
         return data
     
 def ParsePushData(msg):
+    print("ParsePushData Called")
     js = json.loads(msg)
     pData = OKExMessage.pushData()
     pData.arg = js["arg"]
+    print(type(js["data"]))
     if(js["arg"]["channel"]=="account"):
         for data in js["data"]:
             out = OKExMessage.dataAccount()
@@ -160,7 +162,7 @@ def ParsePushData(msg):
     elif(js["arg"]["channel"]=="open-interest"):
         
         return pData
-    elif(js["arg"]["channel"][0:5]=="candle"):
+    elif(js["arg"]["channel"][0:6]=="candle"):
         
         return pData
     elif(js["arg"]["channel"]=="trades"):
@@ -172,26 +174,26 @@ def ParsePushData(msg):
     elif(js["arg"]["channel"]=="mark-price"):
         
         return pData
-    elif(js["arg"]["channel"][0:15]=="mark-price-candle"):
+    elif(js["arg"]["channel"][0:16]=="mark-price-candle"):
         
         return pData
     elif(js["arg"]["channel"]=="price-limit"):
         
         return pData
-    elif(js["arg"]["channel"][0:4]=="books"):
-        pData.arg["action"] = data["action"]#snapshot or update
+    elif(js["arg"]["channel"][0:5]=="books"):
+        pData.arg["action"] = js["action"]#snapshot or update
         for data in js["data"]:#data contains asks,bids,ts,checksum
             ordbook = OKExMessage.dataOrderBook()
             ordbook.ts = int(data["ts"])
             ordbook.checksum = int(data["checksum"])
-            for a in js["asks"]:
+            for a in data["asks"]:
                 bk = OKExMessage.book()
                 bk.px = float(a[0])
                 bk.qty = float(a[1])
                 bk.LiqOrd = float(a[2])
                 bk.NumOfOrd = int(a[3])
                 ordbook.asks.append(bk)
-            for b in js["bids"]:
+            for b in data["bids"]:
                 bk = OKExMessage.book()
                 bk.px = float(b[0])
                 bk.qty = float(b[1])
@@ -206,7 +208,7 @@ def ParsePushData(msg):
     elif(js["arg"]["channel"]=="funding-rate"):
         
         return pData
-    elif(js["arg"]["channel"][0:11]=="index-candle"):
+    elif(js["arg"]["channel"][0:12]=="index-candle"):
         
         return pData
     elif(js["arg"]["channel"]=="index-tickers"):

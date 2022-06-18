@@ -34,7 +34,12 @@ class FeedReceiver:
     
     def Initialize(self):
         self.ListeningFeedTh = threading.Thread(target=self.ListeningFeed,args=())
-
+    
+    def StartListeningFeedTh(self):
+        self.ListeningFeedTh = threading.Thread(target=self.ListeningFeed,args=())
+        self.isListening = True
+        self.ListeningFeedTh.start()
+        
     def SetParam(self,url):
         self.__url = url
     
@@ -53,8 +58,7 @@ class FeedReceiver:
         reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
         self.Subscribe(reqmsg)
         if(self.isListening == False):
-            self.isListening = True
-            self.ListeningFeedTh.start()
+            self.StartListeningFeedTh()
             
     
     def StartListenOrderBook(self,InsList):
@@ -65,8 +69,7 @@ class FeedReceiver:
         reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
         self.Subscribe(reqmsg)
         if(self.isListening == False):
-            self.isListening = True
-            self.ListeningFeedTh.start()
+            self.StartListeningFeedTh()
     
     def StartListenTrade(self,InsList):
         strargs="["
@@ -76,8 +79,7 @@ class FeedReceiver:
         reqmsg="{\"op\":\"subscribe\",\"args\":" + strargs + "}"
         self.Subscribe(reqmsg)
         if(self.isListening == False):
-            self.isListening = True
-            self.ListeningFeedTh.start()
+            self.StartListeningFeedTh()
     
     def recv(self):
         if(self.feedQueue.empty()):
