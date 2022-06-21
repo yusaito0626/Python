@@ -79,10 +79,13 @@ class execType(Enum):
     
 class orderState(Enum):
     NONE = 0
-    CANCELED = 1
-    LIVE = 2
+    LIVE = 1
+    CANCELED = 2
     PARTIALLY_FILLED = 3
     FILLED = 4
+    WAIT_NEW = 11
+    WAIT_AMD = 12
+    WAIT_CAN = 13
     
 class priceType(Enum):
     NONE = 0

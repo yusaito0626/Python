@@ -31,7 +31,7 @@ class odrTicket:
         self.ordId = ""
         self.clOrdId = ""
         self.tag = ""
-        self.side = OKExEnums.Side.NONE
+        self.side = OKExEnums.side.NONE
         self.posSide = OKExEnums.positionSide.NONE
         self.ordType = OKExEnums.orderType.NONE
         self.sz = 0
@@ -42,13 +42,7 @@ class odrTicket:
     #Only Amend Orders
         self.cxlOnFail = False
         self.reqId = ""
-    
-class SndOrder:
-    def __init__(self):
-        self.uniId = ""
-        self.op = ""
-        self.orderList = []#List of odrTicket
-    
+
 class ackTicket:
     def __init__(self):
         self.ordId = ""
@@ -57,15 +51,21 @@ class ackTicket:
         self.sCode = 0
         self.sMsg = ""
         self.reqId = ""
-    
-class AckOrder:
+
+class msgOrder:
     def __init__(self):
         self.uniId = ""
         self.op = ""
         self.errCode = 0
         self.errMsg = ""
         self.ackList = []#List of ackTicket
-  
+        self.orderList = []#List of odrTicket
+        #Add one ticket each when initializing.
+        #Add another as needed.
+        self.ackList.append(ackTicket())
+        self.orderList.append(odrTicket())
+    
+
 ### Private Channel ###  
   
 class dataAccDetail:

@@ -53,6 +53,7 @@ if __name__ == "__main__":
     f = open(filename,'w')
     
     trials = 1
+    currentDay = today.day
     
     while(trials < 11):
         try:
@@ -60,7 +61,6 @@ if __name__ == "__main__":
             print("Connection establised.")
             feedReceiver.StartListenOrderBook(insList)
             feedReceiver.StartListenTrade(insList)
-            currentDay = today.day
             currentMin = today.minute
     
             print("Start Collecting Data From OKEx. Attempts:" + str(trials))
