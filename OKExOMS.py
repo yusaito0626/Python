@@ -26,6 +26,9 @@ class OMS:
             while True:
                 msg = self.oms.recv()
                 if(msg==""):#websocket has been closed
+                    print("The websocket disconnected.")
+                    self.ackQueue.put("END")
+                    self.isListening = False
                     break
                 else:
                     self.ackQueue.put(msg)
@@ -128,8 +131,9 @@ class OMS:
         self.oms.connect(self.__url)
         self.oms.send(LoginMsg)
     
-        msg =  self.oms.recv()   
-        self.AckCheckingTh.start()
+        msg =  self.oms.recv()
+        if(self.isListening == False):
+            self.startListeningMsg()
         return msg
     
     def ConnectWithInfo(self,url,apiKey,passphrase,secretKey):
@@ -152,8 +156,9 @@ class OMS:
         self.oms.connect(self.__url)
         self.oms.send(LoginMsg)
 
-        msg =  self.oms.recv()   
-        self.AckCheckingTh.start()
+        msg =  self.oms.recv()
+        if(self.isListening == False):
+            self.startListeningMsg()
         return msg
     
     def Disconnect(self):
@@ -164,30 +169,44 @@ class OMS:
         if(self.ackQueue.empty()):
             return ""
         else:
-            return self.ackQueue.get()
+            return self.ackQueue.get_nowait()
     
     def __Subscribe(self,args):#args starts with [
         msg = "{\"op\":\"subscribe\",\"args\":" + args + "}"
         self.oms.send(msg)
         #Do not receive ack here since other subscription may exist already.
     
+    def subscribeAccount(self,ccy=""):
+        args=""
+        if ccy!="":
+            args = "[{\"channel\":\"account\",\"ccy\":\"" + ccy + "\"}]"
+        else:
+            args = "[{\"channel\":\"account\"}]"
+        self.__Subscribe(args)
+    
+    def subscribeBalAndPos(self):
+        args = "[{\"channel\":\"balance_and_position\"}]"
+        self.__Subscribe(args)
+        
     def getId(self,instId):
         output = instId.replace('-','') + "{:06}".format(self.ordIndex)
         self.ordIndex += 1
         return output
         
     #Store tkt objects in the queue and return order object
-    def sendNewOrder(self,instId,tdMode,side,ordType,sz,px=0):
+    def sendNewOrder(self,instId,tdMode,side,ordType,sz,px=0,ccy=""):
         #If you need specify other args, add them.
         odr = self.orderPool.get()
         strId = self.getId(instId)
         msg = "{\"id\":\"" + strId + "\",\"op\":\"order\",\"args\":[{"
         strInstId = "\"instId\":\"" + instId + "\""
+        strClOrdId = "\"clOrdId\":\"" + strId + "\""
         strSide = ""
         strTdMode = ""
         strOrdType = ""
         strSz = ""
         strPx = ""
+        strCcy = ""
         if(side==OKExEnums.side.BUY):
             strSide = "\"side\":\"buy\""
         elif(side==OKExEnums.side.SELL):
@@ -236,8 +255,13 @@ class OMS:
                 return odr
         else:
             strPx = "\"px\":\"" + str(px) + "\""
+            
+        if(ccy!=""):
+            strCcy = "\"ccy\":\"" + ccy + "\""
         
-        msg += strInstId + "," + strSide + "," + strTdMode + "," + strOrdType + "," + strSz
+        msg += strInstId + "," + strClOrdId + "," + strSide + "," + strTdMode + "," + strOrdType + "," + strSz
+        if(strCcy!=""):
+            msg += "," + strCcy
         if(strPx != ""):
             msg += "," + strPx
         msg+="}]}"
@@ -264,7 +288,7 @@ class OMS:
         return odr
         
     def sendModOrder(self,instId,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change
-        odr = self.liveOrdList.get(clOrdId,default=self.nullOrd)
+        odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
         strId = self.getId(instId)
@@ -301,7 +325,7 @@ class OMS:
         return odr
             
     def sendCanOrder(self,instId,clOrdId):
-        odr = self.liveOrdList.get(clOrdId,default=self.nullOrd)
+        odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
         strId = self.getId(instId)

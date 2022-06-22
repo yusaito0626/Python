@@ -85,7 +85,7 @@ class FeedReceiver:
         if(self.feedQueue.empty()):
             return ""
         else:
-            return self.feedQueue.get()
+            return self.feedQueue.get_nowait()
         
     def Disconnect(self):
         self.__FeedReceiver.close()
