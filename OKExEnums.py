@@ -193,3 +193,8 @@ class serviceType(Enum):
     PERPETUAL = 3
     OPTIONS = 4
     TRADING = 5
+    
+class ctType(Enum):
+    NONE = 0
+    INVERSE = 1
+    LINEAR = 2

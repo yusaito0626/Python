@@ -411,11 +411,34 @@ class Instrument:
     
     def __init__(self):
         self.instId = ""
+        self.instType = OKExEnums.instType.NONE
+        self.baseCcy = ""
+        self.quoteCcy = ""
+        self.settleCcy = ""
+        self.uly = ""
+        self.category = 0
+        self.ctMulti = 1
+        self.ctType = OKExEnums.ctType.NONE
+        self.ctVal = 0
+        self.ctValCcy = ""
+        self.expTime = 0
+        self.lever = 1
+        self.listTime = 0
+        self.lotSz = 1
+        self.maxIcebergSz = 0
+        self.maxLmtSz = 0
+        self.maxMktSz = 0
+        self.maxStopSz = 0
+        self.maxTriggerSz = 0
+        self.maxTwapSz = 0
+        self.minSz = 0
+        self.state = OKExEnums.insState.NONE
+        self.tickSz = 0#priceUnit should be 1 / tickSz
+        
         self.Books = Board()
         self.ordList = {} #Pair of Id and order object
         self.liveOrdList = {}
-
-        
+        self.pos = 0.0
     
         self.Mid = 0.0
     
@@ -423,4 +446,88 @@ class Instrument:
     
         #Factors
 
+    def setInsData(self,dict_info):
+        self.instId = dict_info["instId"]
+        if(dict_info["instType"]=="SPOT"):
+            self.instType = OKExEnums.instType.SPOT
+        elif(dict_info["instType"]=="SWAP"):
+            self.instType = OKExEnums.instType.SWAP
+        elif(dict_info["instType"]=="FUTURES"):
+            self.instType = OKExEnums.instType.FUTURES
+        elif(dict_info["instType"]=="MARGIN"):
+            self.instType = OKExEnums.instType.MARGIN
+        else:
+            self.instType = OKExEnums.instType.NONE
+        self.baseCcy = dict_info["baseCcy"]
+        self.quoteCcy = dict_info["quoteCcy"]
+        self.settleCcy = dict_info["settleCcy"]
+        self.uly = dict_info["uly"]
+        if(dict_info["category"]!=""):
+            self.category = int(dict_info["category"])
+        if(dict_info["ctMult"]!=""):
+            self.ctMulti = int(dict_info["ctMult"])
+        if(dict_info["ctType"]=="inverse"):
+            self.ctType = OKExEnums.ctType.INVERSE
+        elif(dict_info["ctType"]=="linear"):
+            self.ctType = OKExEnums.ctType.LINEAR
+        if(dict_info["ctVal"]!=""):
+            self.ctVal = float(dict_info["ctVal"])
+        self.ctValCcy = dict_info["ctValCcy"]
+        if(dict_info["expTime"]!=""):
+            self.expTime = int(dict_info["expTime"])
+        if(dict_info["lever"]!=""):
+            self.lever = float(dict_info["lever"])
+        if(dict_info["listTime"]!=""):
+            self.listTime = int(dict_info["listTime"])
+        if(dict_info["lotSz"]!=""):
+            self.lotSz = float(dict_info["lotSz"])
+        if(dict_info["maxIcebergSz"]!=""):
+            self.maxIcebergSz = float(dict_info["maxIcebergSz"])
+        if(dict_info["maxLmtSz"]!=""):
+            self.maxLmtSz = float(dict_info["maxLmtSz"])
+        if(dict_info["maxMktSz"]!=""):
+            self.maxMktSz = float(dict_info["maxMktSz"])
+        if(dict_info["maxStopSz"]!=""):
+            self.maxStopSz = float(dict_info["maxStopSz"])
+        if(dict_info["maxTriggerSz"]!=""):
+            self.maxTriggerSz = float(dict_info["maxTriggerSz"])
+        if(dict_info["maxTwapSz"]!=""):
+            self.maxTwapSz = float(dict_info["maxTwapSz"])
+        if(dict_info["minSz"]!=""):
+            self.minSz = float(dict_info["minSz"])
         
+        if(dict_info["state"]=="live"):
+            self.state = OKExEnums.insState.LIVE
+        elif(dict_info["state"]=="suspend"):
+            self.state = OKExEnums.insState.SUSPEND
+        elif(dict_info["state"]=="expired"):
+            self.state = OKExEnums.insState.EXPIRED
+        elif(dict_info["state"]=="preopen"):
+            self.state = OKExEnums.insState.PREOPEN
+        elif(dict_info["state"]=="settlement"):
+            self.state = OKExEnums.insState.SETTLEMENT
+        else:
+            self.state = OKExEnums.insState.NONE
+        if(dict_info["tickSz"]!=""):
+            self.tickSz = float(dict_info["tickSz"])
+    
+    def ToString(self):
+        outputline = self.instId + "," + str(self.instType) + "," \
+                    + self.baseCcy + "," + self.quoteCcy + "," \
+                    + self.settleCcy + "," + self.uly + "," \
+                    + str(self.category) + "," + str(self.ctMulti) + "," \
+                    + str(self.ctType) + "," + str(self.ctVal) + "," \
+                    + self.ctValCcy + "," + str(self.expTime) + "," \
+                    + str(self.lever) + "," + str(self.listTime) + "," \
+                    + str(self.lotSz) + "," + str(self.maxIcebergSz) + "," \
+                    + str(self.maxLmtSz) + "," + str(self.maxMktSz) + "," \
+                    + str(self.maxStopSz) + "," + str(self.maxTriggerSz) + "," \
+                    + str(self.maxTwapSz) + "," + str(self.minSz) + "," \
+                    + str(self.state) + "," + str(self.tickSz) + "," \
+                    + str(self.pos) + "," + str(self.Mid) + "," \
+                    + str(self.ts)
+        return outputline
+    def ToJsonString(self):
+        outputline = "" 
+    def ToJson(self):
+        line = self.ToJsonString()

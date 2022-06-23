@@ -194,12 +194,12 @@ class OMS:
         return output
         
     #Store tkt objects in the queue and return order object
-    def sendNewOrder(self,instId,tdMode,side,ordType,sz,px=0,ccy=""):
+    def sendNewOrder(self,ins,tdMode,side,ordType,sz,px=0,ccy=""):
         #If you need specify other args, add them.
         odr = self.orderPool.get()
-        strId = self.getId(instId)
+        strId = self.getId(ins.instId)
         msg = "{\"id\":\"" + strId + "\",\"op\":\"order\",\"args\":[{"
-        strInstId = "\"instId\":\"" + instId + "\""
+        strInstId = "\"instId\":\"" + ins.instId + "\""
         strClOrdId = "\"clOrdId\":\"" + strId + "\""
         strSide = ""
         strTdMode = ""
@@ -207,10 +207,21 @@ class OMS:
         strSz = ""
         strPx = ""
         strCcy = ""
+        strPosSide =""
         if(side==OKExEnums.side.BUY):
             strSide = "\"side\":\"buy\""
+            if(ins.instType == OKExEnums.instType.FUTURES or ins.instType == OKExEnums.instType.SWAP):
+                if(ins.pos < 0 and sz <= - ins.pos):
+                    strPosSide = "\"posSide\":\"short\""
+                else:
+                    strPosSide = "\"posSide\":\"long\""
         elif(side==OKExEnums.side.SELL):
             strSide = "\"side\":\"sell\""
+            if(ins.instType == OKExEnums.instType.FUTURES or ins.instType == OKExEnums.instType.SWAP):
+                if(ins.pos > 0 and sz <=  ins.pos):
+                    strPosSide = "\"posSide\":\"long\""
+                else:
+                    strPosSide = "\"posSide\":\"short\""
         else:
             odr.msg = "[REJECT]Invalid side"
             return odr
@@ -260,6 +271,8 @@ class OMS:
             strCcy = "\"ccy\":\"" + ccy + "\""
         
         msg += strInstId + "," + strClOrdId + "," + strSide + "," + strTdMode + "," + strOrdType + "," + strSz
+        if(strPosSide!=""):
+            msg += "," + strPosSide
         if(strCcy!=""):
             msg += "," + strCcy
         if(strPx != ""):
@@ -269,7 +282,7 @@ class OMS:
         msgOrd = self.msgOrdPool.get()
         msgOrd.uniId = strId
         msgOrd.op = "order"
-        msgOrd.orderList[0].instId = instId
+        msgOrd.orderList[0].instId = ins.instId
         msgOrd.orderList[0].tdMode = tdMode
         msgOrd.orderList[0].clOrdId = strId
         msgOrd.orderList[0].side = side
@@ -287,14 +300,14 @@ class OMS:
         self.ordList[odr.clOrdId] = odr
         return odr
         
-    def sendModOrder(self,instId,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change
+    def sendModOrder(self,ins,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change
         odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
-        strId = self.getId(instId)
+        strId = self.getId(ins.instId)
         msg = "{\"id\":\"" + strId + "\",\"op\":\"amend-order\",\"args\":[{"
             
-        strInstId = "\"instId\":\"" + instId + "\""
+        strInstId = "\"instId\":\"" + ins.instId + "\""
         strClOrdId = "\"clOrdId\":\"" + clOrdId + "\""
         
         msg += strInstId + "," + strClOrdId
@@ -311,7 +324,7 @@ class OMS:
         
         msgOrd.uniId = strId
         msgOrd.op = "amend-order"
-        msgOrd.orderList[0].instId = instId
+        msgOrd.orderList[0].instId = ins.instId
         msgOrd.orderList[0].clOrdId = clOrdId
         msgOrd.orderList[0].sz = newSz
         msgOrd.orderList[0].px = newPx
@@ -324,14 +337,14 @@ class OMS:
         self.ordList[odr.clOrdId] = odr
         return odr
             
-    def sendCanOrder(self,instId,clOrdId):
+    def sendCanOrder(self,ins,clOrdId):
         odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
-        strId = self.getId(instId)
+        strId = self.getId(ins.instId)
         msg = "{\"id\":\"" + strId + "\",\"op\":\"cancel-order\",\"args\":[{"
             
-        strInstId = "\"instId\":\"" + instId + "\""
+        strInstId = "\"instId\":\"" + ins.instId + "\""
         strClOrdId = "\"clOrdId\":\"" + clOrdId + "\""
         
         msg += strInstId + "," + strClOrdId + "}]}"
@@ -341,7 +354,7 @@ class OMS:
         
         msgOrd.uniId = strId
         msgOrd.op = "cancel-order"
-        msgOrd.orderList[0].instId = instId
+        msgOrd.orderList[0].instId = ins.instId
         msgOrd.orderList[0].clOrdId = clOrdId
         
         self.tktQueue.put(msgOrd)
