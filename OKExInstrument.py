@@ -439,7 +439,7 @@ class Instrument:
         self.ordList = {} #Pair of Id and order object
         self.liveOrdList = {}
         self.pos = 0.0
-    
+        
         self.Mid = 0.0
     
         self.ts = 0
@@ -510,6 +510,10 @@ class Instrument:
             self.state = OKExEnums.insState.NONE
         if(dict_info["tickSz"]!=""):
             self.tickSz = float(dict_info["tickSz"])
+            
+    def updateOrder(self,tkt):
+        i = 0
+        
     
     def ToString(self):
         outputline = self.instId + "," + str(self.instType) + "," \

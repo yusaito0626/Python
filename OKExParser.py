@@ -11,48 +11,57 @@ import json
 def ParseOp(msg):
     data = json.loads(msg)
     if(data["op"]=="order" or data["op"]=="batch-orders"):
-        out = OKExMessage.AckOrder()
+        out = OKExMessage.msgOrder()
         out.op = data["op"]
         out.uniId = data["id"]
         out.errCode = int(data["code"])
         out.errMsg = data["msg"]
+        i = 0
         for d in data["data"]:
-            tkt = OKExMessage.ackTicket()
+            if(i > 0):
+               out.ackList.append(OKExMessage.ackTicket())
+            tkt = out.ackList[i]
             tkt.clOrdId = d["clOrdId"]
             tkt.ordId = d["ordId"]
             tkt.tag = d["tag"]
             tkt.sCode = int(d["sCode"])
             tkt.sMsg = d["sMsg"]
-            out.ackList.append(tkt)
+            i += 1
         return out
     elif(data["op"]=="cancel-order" or data["op"]=="batch-cancel-orders"):
-        out = OKExMessage.AckOrder()
+        out = OKExMessage.msgOrder()
         out.op = data["op"]
         out.uniId = data["id"]
         out.errCode = int(data["code"])
         out.errMsg = data["msg"]
+        i = 0
         for d in data["data"]:
-            tkt = OKExMessage.ackTicket()
+            if(i > 0):
+                out.ackList.append(OKExMessage.ackTicket())
+            tkt = out.ackList[i]
             tkt.clOrdId = d["clOrdId"]
             tkt.ordId = d["ordId"]
             tkt.sCode = int(d["sCode"])
             tkt.sMsg = d["sMsg"]
-            out.ackList.append(tkt)
+            i += 1
         return out
     elif(data["op"]=="amend-order" or data["op"]=="batch-amend-orders"):
-        out = OKExMessage.AckOrder()
+        out = OKExMessage.msgOrder()
         out.op = data["op"]
         out.uniId = data["id"]
         out.errCode = int(data["code"])
         out.errMsg = data["msg"]
+        i = 0
         for d in data["data"]:
-            tkt = OKExMessage.ackTicket()
+            if(i > 0):
+                out.ackList.append(OKExMessage.ackTicket())
+            tkt = out.ackList[i]
             tkt.clOrdId = d["clOrdId"]
             tkt.ordId = d["ordId"]
             tkt.reqId = d["reqId"]
             tkt.sCode = int(d["sCode"])
             tkt.sMsg = d["sMsg"]
-            out.ackList.append(tkt)
+            i += 1
         return out
     
 def ParseEvent(msg):

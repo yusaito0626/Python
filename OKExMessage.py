@@ -19,6 +19,15 @@ class pushData:
     def __init__(self):
         self.arg = {}
         self.data = []
+        
+    def ToString(self):
+        msg = ""
+        for a in self.arg.values():
+            msg += a + ","
+        for d in self.data:
+            msg += d.ToString() + ","
+        
+        return msg[0:len(msg) - 1]
     
 
 ### Trade ###
@@ -42,7 +51,14 @@ class odrTicket:
     #Only Amend Orders
         self.cxlOnFail = False
         self.reqId = ""
-
+        
+    def ToString(self):
+        return self.instId + "," + str(self.tdMode) + "," + self.ccy + "," + \
+            self.ordId + "," + self.clOrdId + "," + self.tag + "," + str(self.side) + "," + \
+            str(self.posSide) + "," + str(self.ordType) + "," + str(self.sz) + "," + \
+            str(self.px) + "," + str(self.reduceOnly) + "," + str(self.tgtCcy) + "," + \
+            str(self.banAmend) + "," + str(self.cxlOnFail) + "," + self.reqId
+            
 class ackTicket:
     def __init__(self):
         self.ordId = ""
@@ -51,6 +67,10 @@ class ackTicket:
         self.sCode = 0
         self.sMsg = ""
         self.reqId = ""
+    
+    def ToString(self):
+        return self.ordId + "," + self.clOrderId + "," + self.tag \
+                + "," + str(self.sCode) + "," + self.sMsg + "," + self.reqId
 
 class msgOrder:
     def __init__(self):
@@ -65,7 +85,19 @@ class msgOrder:
         self.ackList.append(ackTicket())
         self.orderList.append(odrTicket())
     
-
+    def ToString(self):
+        msg = self.uniId + "," + self.op + "," + str(self.errCode) + "," + self.errMsg + ","
+        ackmsg = ","
+        for ack in self.ackList:
+            ackmsg += ack.ToString() + ","
+        if(ackmsg != ","):
+            msg += ackmsg
+        ordmsg = ","
+        for odr in self.orderList:
+            ordmsg += odr.ToString() + ","
+        if(ordmsg != ","):
+            msg += ordmsg
+        return msg[0:len(msg) - 1]
 ### Private Channel ###  
   
 class dataAccDetail:
@@ -483,7 +515,7 @@ class dataInstrument:
         self.instId = ""
         self.uly = ""
         self.category = 0
-        self.baceCcy = ""
+        self.baseCcy = ""
         self.quoteCcy = ""
         self.settleCcy = ""
         self.ctVal = 0.0
@@ -506,7 +538,18 @@ class dataInstrument:
         self.maxIcebergSz = 0.0
         self.maxTriggerSz = 0.0
         self.maxStopSz = 0.0
-    
+        
+    def ToString(self):
+        return str(self.instType) + "," + self.instId + "," + self.uly + "," +  \
+            str(self.category) + "," + self.baseCcy + "," + self.quoteCcy + "," + \
+            self.settleCcy + "," + str(self.ctVal) + "," + str(self.ctMulti) + "," + \
+            self.ctValCcy + "," + str(self.optType) + "," + str(self.stk) + "," + \
+            str(self.listTime) + "," + str(self.expTime) + "," + str(self.lever) + "," + \
+            str(self.tickSz) + "," + str(self.lotSz) + "," + str(self.minSz) + "," + \
+            str(self.ctType) + "," + self.alias + "," + str(self.state) + "," + \
+            str(self.maxLmtSz) + "," + str(self.maxMktSz) + "," + str(self.maxTwapSz) + "," + \
+            str(self.maxIcebergSz) + "," + str(self.maxTriggerSz) + "," + str(self.maxStopSz)
+            
 class dataTicker:
     def __init__(self):
         self.instType = OKExEnums.instType.NONE
@@ -589,6 +632,9 @@ class book:
         self.qty = 0.0
         self.LiqOrd = 0.0
         self.NumOfOrd = 0
+        
+    def ToString(self):
+        return str(self.px) + "," + str(self.qty) + "," + str(self.LiqOrd) + "," + str(self.NumOfOrd)
     
 class dataOrderBook:
     def __init__(self):
@@ -596,7 +642,16 @@ class dataOrderBook:
         self.bids = []#List of book
         self.ts = 0
         self.checksum = 0
-    
+        
+    def ToString(self):
+        msg = str(self.ts) + ",asks,"
+        for a in self.asks:
+            msg += a.ToString() + ","
+        msg += "bids,"
+        for b in self.bids:
+            msg += b.ToString() + ","
+        msg += str(self.checksum)
+        
 class dataOptionSummary:
     def __init__(self):
         self.instType = OKExEnums.instType.NONE

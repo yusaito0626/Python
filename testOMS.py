@@ -91,11 +91,13 @@ if __name__ == "__main__":
     
     oms.subscribeBalAndPos()
     
-    oms.sendNewOrder("BTC-USD-SWAP", OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 0.001,19500.0,"USDT")
+    ins = insList["BTC-USD-SWAP"]
+    
+    odr = oms.sendNewOrder(ins, OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 2,19500.0,"USDT")
     time.sleep(1)
-    oms.sendModOrder("BTC-USD-SWAP", "BTCUSDT000000",0.0005)
+    oms.sendModOrder(ins, odr.clOrdId,1)
     time.sleep(1)
-    #oms.sendCanOrder("BTC-USD-SWAP", "BTCUSDT000000")
+    oms.sendCanOrder(ins, odr.clOrdId)
     time.sleep(1)
 #    oms.sendNewOrder("BTC-USDT", OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 0.001,19500.0,"USDT")
 #    time.sleep(1)
