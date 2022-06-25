@@ -6,10 +6,10 @@ Created on Sun Jun 12 14:07:15 2022
 """
 
 import math
-from OKEx.Utils import params
-from OKEx import OKExEnums
-from OKEx import OKExMessage
-from OKEx.Utils import Utils
+from Utils import params
+import OKExEnums
+import OKExMessage
+from Utils import Utils
 
 class Book:
     def __init__(self):
@@ -65,6 +65,8 @@ class Board:
         self.ts = 0
         self.priceUnit = 1#Price multiplier to convert price to int
         self.depth = 0
+        self.ctType = OKExEnums.ctType.NONE
+        self.ctVal = 1
         
     def ToString(self,side=OKExEnums.side.NONE):
         line = ""
@@ -141,6 +143,10 @@ class Board:
                 self.ts = data.ts
             i = 0
             for b in data.bids:
+                if(self.ctType == OKExEnums.ctType.INVERSE):
+                    b.qty *= self.ctVal / b.px
+                else:
+                    b.qty *= self.ctVal
                 if(i < depth):
                     bk = Book()
                     bk.UpdateBook(b, OKExEnums.side.BUY, self.priceUnit)
@@ -222,6 +228,10 @@ class Board:
                     break
             i = 0                
             for a in data.asks:
+                if(self.ctType == OKExEnums.ctType.INVERSE):
+                    a.qty *= self.ctVal / a.px
+                else:
+                    a.qty *= self.ctVal
                 if(i < depth):
                     bk = Book()
                     bk.UpdateBook(a, OKExEnums.side.SELL, self.priceUnit)
@@ -308,6 +318,10 @@ class Board:
             #If the price is found in dict,replace
             #else if the price is inside of best bid and ask, replace end.__prev to new price
             for b in data.bids:
+                if(self.ctType == OKExEnums.ctType.INVERSE):
+                    b.qty *= self.ctVal / b.px
+                else:
+                    b.qty *= self.ctVal
                 bidx = self.findBook(OKExEnums.side.BUY,b.px * self.priceUnit)
                 if(bidx >= 0):
                     bid = self.bids[bidx]
@@ -360,6 +374,10 @@ class Board:
                             newpx += 1
                             i += 1
             for a in data.asks:
+                if(self.ctType == OKExEnums.ctType.INVERSE):
+                    a.qty *= self.ctVal / a.px
+                else:
+                    a.qty *= self.ctVal
                 aidx = self.findBook(OKExEnums.side.SELL,a.px * self.priceUnit)
                 if(aidx >= 0):
                     ask = self.asks[aidx]
@@ -513,10 +531,16 @@ class Instrument:
             self.ctMulti = int(dict_info["ctMult"])
         if(dict_info["ctType"]=="inverse"):
             self.ctType = OKExEnums.ctType.INVERSE
-        elif(dict_info["ctType"]=="linear"):
+            self.Books.ctType = self.ctType
+        else:
             self.ctType = OKExEnums.ctType.LINEAR
+            self.Books.ctType = self.ctType
         if(dict_info["ctVal"]!=""):
             self.ctVal = float(dict_info["ctVal"])
+            self.Books.ctVal = self.ctVal
+        else:
+            self.ctVal = 1
+            self.Books.ctVal = 1
         self.ctValCcy = dict_info["ctValCcy"]
         if(dict_info["expTime"]!=""):
             self.expTime = int(dict_info["expTime"])
@@ -571,16 +595,28 @@ class Instrument:
             if(self.last > 0 and self.last != d.px):
                 self.realizedVolatility += math.pow(math.log(self.last/d.px),2)
             self.last = d.px
-            if(d.side == OKExEnums.side.BUY):#this means the market order is BUY
-                #exec on ask side
-                self.execAskCnt += 1
-                self.execAskVol += d.sz
-                self.execAskAmt += d.px * d.sz
-            elif(d.side == OKExEnums.side.SELL):#this means the market order is SELL
-                #exec on bid side
-                self.execBidCnt += 1
-                self.execBidVol += d.sz
-                self.execBidAmt += d.px * d.sz
+            if(self.ctType == OKExEnums.ctType.INVERSE):
+                if(d.side == OKExEnums.side.BUY):#this means the market order is BUY
+                    #exec on ask side
+                    self.execAskCnt += 1
+                    self.execAskVol += d.sz * self.ctVal / d.px
+                    self.execAskAmt += d.sz * self.ctVal
+                elif(d.side == OKExEnums.side.SELL):#this means the market order is SELL
+                    #exec on bid side
+                    self.execBidCnt += 1
+                    self.execBidVol += d.sz * self.ctVal / d.px
+                    self.execBidAmt += d.sz * self.ctVal
+            else:
+                if(d.side == OKExEnums.side.BUY):#this means the market order is BUY
+                    #exec on ask side
+                    self.execAskCnt += 1
+                    self.execAskVol += d.sz * self.ctVal
+                    self.execAskAmt += d.px * d.sz * self.ctVal
+                elif(d.side == OKExEnums.side.SELL):#this means the market order is SELL
+                    #exec on bid side
+                    self.execBidCnt += 1
+                    self.execBidVol += d.sz * self.ctVal
+                    self.execBidAmt += d.px * d.sz * self.ctVal
             
             
     def updateBooks(self,msg):#get pushData

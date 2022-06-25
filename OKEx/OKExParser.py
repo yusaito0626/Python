@@ -66,19 +66,24 @@ def ParseOp(msg):
     
 def ParseEvent(msg):
     data = json.loads(msg)
+    pData = OKExMessage.pushData()
+    pData.dataType = "event"
+    pData.arg = data["arg"]
+    pData.arg["event"] = data["event"]
     if(data["event"]=="subscribe"):
-        return data
+        return pData
     elif(data["event"]=="unsubscribe"):
-        return data
+        return pData
     elif(data["event"]=="error"):
-        return data
+        return pData
     
 def ParsePushData(msg):
-    print("ParsePushData Called")
+    #print("ParsePushData Called")
     js = json.loads(msg)
     pData = OKExMessage.pushData()
+    pData.dataType = "push"
     pData.arg = js["arg"]
-    print(type(js["data"]))
+    #print(type(js["data"]))
     if(js["arg"]["channel"]=="account"):
         for data in js["data"]:
             out = OKExMessage.dataAccount()

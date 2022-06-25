@@ -7,10 +7,10 @@ Created on Thu Jun 16 19:46:08 2022
 
 
 import sys
-sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
+sys.path.append("C:\\Users\\yusai\\source\\repos\\Python\\OKEx")
 
-from OKEx import OKExParser
-from OKEx import OKExInstrument
+import OKExParser
+import OKExInstrument
 
 
 Filename = "D:\\OKExFeed\\feedtest.log"

@@ -6,12 +6,13 @@ This is a temporary script file.
 """
 
 import sys
-sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
+sys.path.append("C:\\Users\\yusai\\source\\repos\\Python\\OKEx")
 import requests
 import datetime
 import time
+import json
 
-from OKEx import OKExFeedReceiver
+import OKExFeedReceiver
 
 
 
@@ -20,40 +21,61 @@ if __name__ == "__main__":
     datapath = "D:\\OKExFeed\\"
     url = "wss://ws.okx.com:8443/ws/v5/public"
     
+    today = datetime.datetime.utcnow()
+    
+    masterfilename = datapath + "master\\OKExMaster_"+ today.date().isoformat() + ".txt"
+    master = open(masterfilename,'w')
     
     insList = list()
-    insList.append("BTC-USDT")
+    #insList.append("BTC-USDT")
     rest_url = "https://www.okx.com/"
+    spot_reqmsg ="api/v5/public/instruments?instType=SPOT&instId=BTC-USDT"
+    response = requests.get(rest_url+spot_reqmsg)
+    obj=response.json()
+    for elem in obj['data']:
+        insList.append(elem['instId'])
+        master.write(json.dumps(elem) + "\n")
     fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=BTC-USD"
     response = requests.get(rest_url+fut_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
+        master.write(json.dumps(elem) + "\n")
     swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=BTC-USD"
     response = requests.get(rest_url+swap_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
+        master.write(json.dumps(elem) + "\n")
     
     #Add ETH
     insList.append("ETH-USDT")
     rest_url = "https://www.okx.com/"
+    spot_reqmsg ="api/v5/public/instruments?instType=SPOT&instId=ETH-USDT"
+    response = requests.get(rest_url+spot_reqmsg)
+    obj=response.json()
+    for elem in obj['data']:
+        insList.append(elem['instId'])
+        master.write(json.dumps(elem) + "\n")
     fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=ETH-USD"
     response = requests.get(rest_url+fut_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
+        master.write(json.dumps(elem) + "\n")
     swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=ETH-USD"
     response = requests.get(rest_url+swap_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
-        
+        master.write(json.dumps(elem) + "\n")
+    master.flush()
+    master.close()
+     
     feedReceiver = OKExFeedReceiver.FeedReceiver()
     feedReceiver.Initialize()
     
-    today = datetime.datetime.utcnow()
-    filename = datapath + "OKExFeed_" + today.date().isoformat() + ".log"
+    filename = datapath + "feed\\OKExFeed_" + today.date().isoformat() + ".log"
     f = open(filename,'w')
     
     trials = 1

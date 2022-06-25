@@ -17,11 +17,12 @@ class AckSubscribe:
         
 class pushData:
     def __init__(self):
+        self.dataType = ""
         self.arg = {}
         self.data = []
         
     def ToString(self):
-        msg = ""
+        msg = self.dataType + ","
         for a in self.arg.values():
             msg += a + ","
         for d in self.data:
@@ -74,6 +75,7 @@ class ackTicket:
 
 class msgOrder:
     def __init__(self):
+        self.dataType = "order"
         self.uniId = ""
         self.op = ""
         self.errCode = 0

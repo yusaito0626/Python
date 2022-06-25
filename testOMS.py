@@ -6,14 +6,14 @@ Created on Tue Jun 21 13:04:19 2022
 """
 
 import sys
-sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
+sys.path.append("C:\\Users\\yusai\\source\\repos\\Python\\OKEx")
 
 import threading
 import time
 import requests
-from OKEx import OKExOMS
-from OKEx import OKExEnums
-from OKEx import OKExInstrument
+import OKExOMS
+import OKExEnums
+import OKExInstrument
 
 oms = OKExOMS.OMS()
 
