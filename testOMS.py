@@ -11,9 +11,9 @@ sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
 import threading
 import time
 import requests
-import OKExOMS
-import OKExEnums
-import OKExInstrument
+from OKEx import OKExOMS
+from OKEx import OKExEnums
+from OKEx import OKExInstrument
 
 oms = OKExOMS.OMS()
 

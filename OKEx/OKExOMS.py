@@ -14,9 +14,9 @@ import base64
 import queue
 import threading
 
-import OKExEnums
-import OKExMessage
-import OKExOrder
+from OKEx import OKExEnums
+from OKEx import OKExMessage
+from OKEx import OKExOrder
 
 class OMS:
     

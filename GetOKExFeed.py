@@ -7,10 +7,14 @@ This is a temporary script file.
 
 import sys
 sys.path.append("C:\\Users\\yusai\\source\\repos\\Python")
-import OKExFeedReceiver
 import requests
 import datetime
 import time
+
+from OKEx import OKExFeedReceiver
+
+
+
 
 if __name__ == "__main__":
     datapath = "D:\\OKExFeed\\"

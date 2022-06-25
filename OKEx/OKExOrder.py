@@ -5,7 +5,7 @@ Created on Mon Jun  6 21:58:19 2022
 @author: yusai
 """
 
-import OKExEnums
+from OKEx import OKExEnums
 
 class order:
     def __init__(self):

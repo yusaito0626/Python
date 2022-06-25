@@ -4,7 +4,7 @@ Created on Mon Jun  6 19:58:10 2022
 
 @author: yusai
 """
-import OKExEnums
+from OKEx import OKExEnums
 
 class AckSubscribe:    
     def __init__(self):

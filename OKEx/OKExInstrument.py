@@ -5,7 +5,11 @@ Created on Sun Jun 12 14:07:15 2022
 @author: yusai
 """
 
-import OKExEnums
+import math
+from OKEx.Utils import params
+from OKEx import OKExEnums
+from OKEx import OKExMessage
+from OKEx.Utils import Utils
 
 class Book:
     def __init__(self):
@@ -436,16 +440,57 @@ class Instrument:
         self.tickSz = 0#priceUnit should be 1 / tickSz
         
         self.Books = Board()
+        self.bookDepth = 400
         self.ordList = {} #Pair of Id and order object
         self.liveOrdList = {}
         self.pos = 0.0
         
+        self.last = 0.0
         self.Mid = 0.0
     
         self.ts = 0
     
         #Factors
-
+        self.bookImbalance = 0.0
+        self.realizedVolatility = 0.0
+        self.currentRV = 0.0
+        self.execAskCnt = 0
+        self.execBidCnt = 0
+        self.execAskVol = 0.0
+        self.execBidVol = 0.0
+        self.execAskAmt = 0.0#To Calc VWAP
+        self.execBidAmt = 0.0#To Calc VWAP
+        
+        self.ringIdx = -1
+        self.ringDataCount = 0
+        self.lastRingUpdatedTime = 0
+        self.posRing = []#List of Utils.Ring(180)
+        self.biRing = []
+        self.rvRing = []
+        self.exeAskCRing = []
+        self.exeBidCRing = []
+        self.exeAskVRing = []
+        self.exeBidVRing = []
+        self.bestBidPxRing = []
+        self.bestAskPxRing = []
+        self.posMARing = []
+        self.midMARing = []
+        
+        i = 0
+        while(i<60):
+            self.posRing.append(Utils.Ring(180))
+            self.biRing.append(Utils.Ring(180))
+            self.rvRing.append(Utils.Ring(180))
+            self.exeAskCRing.append(Utils.Ring(180))
+            self.exeBidCRing.append(Utils.Ring(180))
+            self.exeAskVRing.append(Utils.Ring(180))
+            self.exeBidVRing.append(Utils.Ring(180))
+            self.bestBidPxRing.append(Utils.Ring(180))
+            self.bestAskPxRing.append(Utils.Ring(180))
+            self.posMARing.append(Utils.Ring(180))
+            self.midMARing.append(Utils.Ring(180))
+            i += 1
+            
     def setInsData(self,dict_info):
         self.instId = dict_info["instId"]
         if(dict_info["instType"]=="SPOT"):
@@ -510,11 +555,92 @@ class Instrument:
             self.state = OKExEnums.insState.NONE
         if(dict_info["tickSz"]!=""):
             self.tickSz = float(dict_info["tickSz"])
+            self.Books.priceUnit = 1 / self.tickSz
             
+    def updateTrades(self,msg):
+        #self.instId = ""
+        #self.tradeId = ""
+        #self.px = 0.0
+        #self.sz = 0.0
+        #self.side = OKExEnums.side.NONE
+        #self.ts = 0
+        msg = OKExMessage.pushData()
+        for d in msg.data:
+            if(d.ts > self.ts):
+                self.ts = d.ts
+            if(self.last > 0 and self.last != d.px):
+                self.realizedVolatility += math.pow(math.log(self.last/d.px),2)
+            self.last = d.px
+            if(d.side == OKExEnums.side.BUY):#this means the market order is BUY
+                #exec on ask side
+                self.execAskCnt += 1
+                self.execAskVol += d.sz
+                self.execAskAmt += d.px * d.sz
+            elif(d.side == OKExEnums.side.SELL):#this means the market order is SELL
+                #exec on bid side
+                self.execBidCnt += 1
+                self.execBidVol += d.sz
+                self.execBidAmt += d.px * d.sz
+            
+            
+    def updateBooks(self,msg):#get pushData
+        #msg = OKExMessage.pushData()
+        if(msg.arg["channel"]=="books"):#snapshot or update
+            if(self.ts < msg.data.ts):
+                self.ts = msg.data.ts
+            if(msg.arg["action"]=="snapshot"):
+                self.Books.initializeBoard(msg, self.bookDepth)
+            elif(msg.arg["action"]=="update"):
+                self.Books.updateBooks(msg)
+        elif(msg.arg["channel"]=="trades"):
+            self.updateTrades(msg)
+            
+    def updateRings(self):
+        if(self.lastRingUpdatedTime == 0):
+            if(self.ts > 0):
+                self.lastRingUpdatedTime = int(self.ts / 1000) * 1000
+        else:
+            if(self.ts - self.lastRingUpdatedTime >= 1000):
+                self.ringIdx += 1
+                if(self.ringIdx > 59):
+                    self.ringIdx = 0
+                count = 0
+                while(self.ts - self.lastRingUpdatedTime >= 1000):
+                    self.lastRingUpdatedTime += 1000
+                    self.posRing[self.ringIdx].add(self.pos)
+                    self.biRing[self.ringIdx].add(self.bookImbalance)
+                    self.rvRing[self.ringIdx].add(self.realizedVolatility)
+                    self.exeAskCRing[self.ringIdx].add(self.execAskCnt)
+                    self.exeBidCRing[self.ringIdx].add(self.execBidCnt)
+                    self.exeAskVRing[self.ringIdx].add(self.execAskVol)
+                    self.exeBidVRing[self.ringIdx].add(self.execBidVol)
+                    self.bestBidPxRing[self.ringIdx].add(self.Books.BestBid.px)
+                    self.bestAskPxRing =[self.ringIdx].add(self.Books.BestAsk.px)
+                    self.ringDataCount += 1
+                    if(self.ringDataCount > params.posMAPeriod * 60):
+                        maPos = 0.0
+                        i = 0
+                        while(i < params.posMAPeriod):
+                            maPos += self.posRing[self.ringIdx].relative(-i)
+                            i += 1
+                        maPos /= params.posMAPeriod
+                        self.posMARing.add(maPos)
+                    if(self.ringDataCount > params.midMAPeriod * 60):
+                        maMid = 0.0
+                        i = 0
+                        while(i < params.midMAPeriod):#Check Price?
+                            maMid += self.bestAskPxRing[self.ringIdx].relative(-i) + self.bestBidPxRing[self.ringIdx].relative(-i)
+                            i += 1
+                        maMid /= params.posMAPeriod * 2
+                        self.midMARing.add(maMid)
+                    count += 1
+                    if(count > 10000):
+                        #error
+                        break
+                    
     def updateOrder(self,tkt):
         i = 0
-        
-    
+
     def ToString(self):
         outputline = self.instId + "," + str(self.instType) + "," \
                     + self.baseCcy + "," + self.quoteCcy + "," \

@@ -5,8 +5,8 @@ Created on Thu Jun  9 18:31:58 2022
 @author: yusai
 """
 
-import OKExMessage
 import json
+from OKEx import OKExMessage
 
 def ParseOp(msg):
     data = json.loads(msg)
