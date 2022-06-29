@@ -653,7 +653,8 @@ class dataOrderBook:
         for b in self.bids:
             msg += b.ToString() + ","
         msg += str(self.checksum)
-        
+        return msg
+    
 class dataOptionSummary:
     def __init__(self):
         self.instType = OKExEnums.instType.NONE

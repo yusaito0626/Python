@@ -22,9 +22,10 @@ filereader.setFileNameAndPath(filepath, filename)
 filereader.setFile(day)
 print("Create Ins List.")
 today = datetime.datetime.utcnow()
+print(today.isoformat())
 
 masterfilepath = "D:\\OKExFeed\\master"
-masterfilename = "OKExMaster_YYYY-MM-DD.csv"
+masterfilename = "OKExMaster_YYYY-MM-DD.txt"
 filereader.setMasterFile(masterfilepath, masterfilename)
 
 insList = filereader.readMasterFile(day)
@@ -33,18 +34,22 @@ print("Ins List:")
 for i in insList.values():
     print(i.instId)
 print("Start Reading")
-
+today = datetime.datetime.utcnow()
+print(today.isoformat())
 line = ""
 i = 0
 while(line!="\0"):
     line = filereader.readline()
     obj = OKExParser.Parse(line)
     if(obj.dataType=="push"):
-        ins = insList[obj.arg["instId"]]
-        ins.updateBooks(obj)
+        if(obj.arg["instId"] in insList):
+            ins = insList[obj.arg["instId"]]
+            ins.updateBooks(obj)
     i += 1
     if(i > 1000000):
         print(line)
         i = 0
     
 print("Finished reading.")
+today = datetime.datetime.utcnow()
+print(today.isoformat())

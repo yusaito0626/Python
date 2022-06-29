@@ -27,12 +27,12 @@ class Book:
         
     def ToString(self):
         line = str(self.bs) + "," + str(self.px) + "," + str(self.sz) + ","
-        line += str(self.liqOrd) + "," + str(self.NumOfOrd) + "," 
+        line += str(self.liqOrd) + "," + str(self.numOfOrd) + "," 
         line += str(self.idx) + "," + str(self.next) + "," + str(self.prev)
         return line
     
     def initialize(self):
-        self.bs = OKExEnums.side.NONE
+        #self.bs = OKExEnums.side.NONE
         self.px = 0
         self.sz = 0.0
         self.liqOrd = 0
@@ -46,7 +46,7 @@ class Book:
         
     def UpdateBook(self,msgBook, side, priceUnit):
         self.bs = side
-        self.px = (msgBook.px * priceUnit)
+        self.px = int(msgBook.px * priceUnit)
         self.sz = msgBook.qty
         self.liqOrd = msgBook.LiqOrd
         self.NumOfOrd = msgBook.NumOfOrd
@@ -54,6 +54,7 @@ class Book:
 
 class Board:
     def __init__(self):
+        self.instId = ""
         self.bend = Book()
         self.aend = Book()
         self.aend.idx = -1
@@ -86,6 +87,18 @@ class Board:
                     break
                 else:
                     bid = self.bids[bid.next]
+        return line
+    
+    def strAsks(self):
+        line = ""
+        for a in self.asks:
+            line += a.ToString() + "\n"
+        return line
+    
+    def strBids(self):
+        line = ""
+        for b in self.bids:
+            line += b.ToString() + "\n"
         return line
     def findBook(self,side,px):
         if(side == OKExEnums.side.BUY):
@@ -144,9 +157,9 @@ class Board:
             i = 0
             for b in data.bids:
                 if(self.ctType == OKExEnums.ctType.INVERSE):
-                    b.qty *= self.ctVal / b.px
+                    b.qty *= float(self.ctVal) / float(b.px) * float(self.priceUnit)
                 else:
-                    b.qty *= self.ctVal
+                    b.qty *= float(self.ctVal)
                 if(i < depth):
                     bk = Book()
                     bk.UpdateBook(b, OKExEnums.side.BUY, self.priceUnit)
@@ -208,30 +221,47 @@ class Board:
                 if(bid.px - 1 == self.bids[bid.next].px):
                     bid = self.bids[bid.next]
                 else:
-                    blank = self.bids[self.bend.prev]
-                    self.bend.prev = blank.prev
-                    self.bids[blank.prev].next = blank.next
-                    blank.initialize()
-                    blank.px = bid.px - 1
-                    blank.bs = OKExEnums.side.BUY
-                    if(bid.next < 0):
-                        nxt = self.bend
+                    if(i < depth):
+                        bk = Book()
+                        bk.px = bid.px - 1
+                        bk.bs = OKExEnums.side.BUY
+                        bk.idx = i
+                        if(bid.next < 0):
+                            nxt = self.bend
+                        else:
+                            nxt = self.bids[bid.next]
+                        bk.prev = nxt.prev
+                        bk.next = bid.next
+                        bid.next = bk.idx
+                        nxt.prev = bk.idx
+                        self.bids.append(bk)
+                        bid = bk
+                        i += 1
                     else:
-                        nxt = self.bids[bid.next]
-                    blank.prev = nxt.prev
-                    blank.next = bid.next
-                    bid.next = blank.idx
-                    nxt.prev = blank.idx
-                    bid = blank
+                        blank = self.bids[self.bend.prev]
+                        self.bend.prev = blank.prev
+                        self.bids[blank.prev].next = blank.next
+                        blank.initialize()
+                        blank.px = bid.px - 1
+                        blank.bs = OKExEnums.side.BUY
+                        if(bid.next < 0):
+                            nxt = self.bend
+                        else:
+                            nxt = self.bids[bid.next]
+                        blank.prev = nxt.prev
+                        blank.next = bid.next
+                        bid.next = blank.idx
+                        nxt.prev = blank.idx
+                        bid = blank
                     j += 1
-                if(bid.next < 0 or j >= self.depth):
+                if((bid.next < 0 and i == depth) or j >= self.depth):
                     break
             i = 0                
             for a in data.asks:
                 if(self.ctType == OKExEnums.ctType.INVERSE):
-                    a.qty *= self.ctVal / a.px
+                    a.qty *= float(self.ctVal) / float(a.px) * float(self.priceUnit)
                 else:
-                    a.qty *= self.ctVal
+                    a.qty *= float(self.ctVal)
                 if(i < depth):
                     bk = Book()
                     bk.UpdateBook(a, OKExEnums.side.SELL, self.priceUnit)
@@ -292,25 +322,43 @@ class Board:
                 if(ask.px + 1 == self.asks[ask.next].px):
                     ask = self.asks[ask.next]
                 else:
-                    blank = self.asks[self.aend.prev]
-                    self.aend.prev = blank.prev
-                    self.asks[blank.prev].next = blank.next
-                    blank.initialize()
-                    blank.px = ask.px + 1
-                    blank.bs = OKExEnums.side.SELL
-                    if(ask.next < 0):
-                        nxt = self.aend
+                    if(i < depth):
+                        bk = Book()
+                        bk.px = ask.px + 1
+                        bk.bs = OKExEnums.side.SELL
+                        bk.idx = i
+                        if(ask.next < 0):
+                            nxt = self.aend
+                        else:
+                            nxt = self.asks[ask.next]
+                        bk.prev = nxt.prev
+                        bk.next = ask.next
+                        ask.next = bk.idx
+                        nxt.prev = bk.idx
+                        self.asks.append(bk)
+                        ask = bk
+                        i += 1
                     else:
-                        nxt = self.asks[ask.next]
-                    blank.prev = nxt.prev
-                    blank.next = ask.next
-                    ask.next = blank.idx
-                    nxt.prev = blank.idx
-                    ask = blank
+                        blank = self.asks[self.aend.prev]
+                        self.aend.prev = blank.prev
+                        self.asks[blank.prev].next = blank.next
+                        blank.initialize()
+                        blank.px = ask.px + 1
+                        blank.bs = OKExEnums.side.SELL
+                        if(ask.next < 0):
+                            nxt = self.aend
+                        else:
+                            nxt = self.asks[ask.next]
+                        blank.prev = nxt.prev
+                        blank.next = ask.next
+                        ask.next = blank.idx
+                        nxt.prev = blank.idx
+                        ask = blank
                     j += 1
-                if(ask.next < 0 or j >= self.depth):
+                if((ask.next < 0 and i == depth) or j >= self.depth):
                     break
-                
+            #print("Bids:" + str(len(self.bids)))
+            #print("Asks:" + str(len(self.asks)))    
     def updateBooks(self,dataUpdate):    
         for data in dataUpdate.data:
             if(data.ts > self.ts):
@@ -319,10 +367,10 @@ class Board:
             #else if the price is inside of best bid and ask, replace end.__prev to new price
             for b in data.bids:
                 if(self.ctType == OKExEnums.ctType.INVERSE):
-                    b.qty *= self.ctVal / b.px
+                    b.qty *= float(self.ctVal) / float(b.px) * float(self.priceUnit)
                 else:
-                    b.qty *= self.ctVal
-                bidx = self.findBook(OKExEnums.side.BUY,b.px * self.priceUnit)
+                    b.qty *= float(self.ctVal)
+                bidx = self.findBook(OKExEnums.side.BUY,int(b.px * self.priceUnit))
                 if(bidx >= 0):
                     bid = self.bids[bidx]
                     bid.UpdateBook(b,OKExEnums.side.BUY,self.priceUnit)
@@ -330,7 +378,7 @@ class Board:
                         cnt = 0
                         while(True):
                             endprev = self.bids[self.bend.prev]
-                            newpx = endprev.px - 1
+                            newpx = int(endprev.px - 1)
                             nxtbk = self.bids[bid.next]
                             bid.initialize()
                             bid.px = newpx
@@ -347,11 +395,13 @@ class Board:
                                 newpx -= 1
                                 cnt += 1
                                 if(cnt >= self.depth):
-                                    print("The bid books are all 0.")
+                                    self.BestBid = bid
+                                    print("The bid books are all 0. instId:" + self.instId)
+                                    #print(self.strBids())
                                     break
                             
                 elif(b.px * self.priceUnit > self.BestBid.px and b.qty > 0):#Higher than bestbid. Ignore if sz == 0
-                    newpx = self.BestBid.px + 1
+                    newpx = int(self.BestBid.px + 1)
                     i = 0
                     while(i < self.depth):
                         blank = self.bids[self.bend.prev]
@@ -359,7 +409,7 @@ class Board:
                         self.bend.prev = prev.idx
                         prev.next = blank.next
                         blank.initialize()
-                        if(b.px * self.priceUnit == newpx):
+                        if(int(b.px * self.priceUnit) == newpx):
                             blank.UpdateBook(b, OKExEnums.side.BUY,self.priceUnit)
                             self.BestBid.prev = blank.idx
                             blank.next = self.BestBid.idx
@@ -373,49 +423,54 @@ class Board:
                             self.BestBid = blank
                             newpx += 1
                             i += 1
+            #print(len(self.bids))
             for a in data.asks:
                 if(self.ctType == OKExEnums.ctType.INVERSE):
-                    a.qty *= self.ctVal / a.px
+                    a.qty *= float(self.ctVal) / float(a.px) * float(self.priceUnit)
                 else:
-                    a.qty *= self.ctVal
-                aidx = self.findBook(OKExEnums.side.SELL,a.px * self.priceUnit)
+                    a.qty *= float(self.ctVal)
+                aidx = self.findBook(OKExEnums.side.SELL,int(a.px * self.priceUnit))
                 if(aidx >= 0):
                     ask = self.asks[aidx]
                     ask.UpdateBook(a,OKExEnums.side.SELL,self.priceUnit)
                     if(ask.px == self.BestAsk.px and ask.sz == 0):
                         cnt = 0
+                        endprev = self.asks[self.aend.prev]
+                        newpx = int(endprev.px + 1)
+                        nxtbk = self.asks[ask.next]
                         while(True):
-                            endprev = self.asks[self.aend.prev]
-                            newpx = endprev.px + 1
-                            nxtbk = self.asks[ask.next]
                             ask.initialize()
                             ask.px = newpx
                             ask.bs = OKExEnums.side.SELL
-                            ask.prev = self.aend.prev
-                            ask.next = endprev.next
+                            ask.prev = endprev.idx
+                            ask.next = self.aend.idx
                             self.aend.prev = ask.idx
                             endprev.next = ask.idx
                             if(nxtbk.sz > 0):
                                 self.BestAsk = nxtbk
                                 break
                             else:
+                                endprev = ask
                                 ask = nxtbk
+                                nxtbk = self.asks[ask.next]
                                 newpx += + 1
                                 cnt += 1
                                 if(cnt >= self.depth):
-                                    print("The ask books are all 0.")
+                                    self.BestAsk = ask
+                                    print("The ask books are all 0. instId:" + self.instId)
+                                    #print(self.strAsks())
                                     break
                             
                 elif(a.px * self.priceUnit < self.BestAsk.px) and a.qty > 0:#Lower than bestask
-                    newpx = self.BestAsk.px - 1
+                    newpx = int(self.BestAsk.px - 1)
                     i = 0
                     while(i < self.depth):
                         blank = self.asks[self.aend.prev]
                         prev = self.asks[blank.prev]
                         self.aend.prev = prev.idx
-                        prev.next = blank.next
+                        prev.next = self.aend.idx
                         blank.initialize()
-                        if(a.px * self.priceUnit == newpx):
+                        if(int(a.px * self.priceUnit) == newpx):
                             blank.UpdateBook(a, OKExEnums.side.SELL, self.priceUnit)
                             self.BestAsk.prev = blank.idx
                             blank.next = self.BestAsk.idx
@@ -429,6 +484,7 @@ class Board:
                             self.BestAsk = blank
                             newpx -= 1
                             i += 1
+            #print(len(self.asks))
 class Instrument:
     
     def __init__(self):
@@ -622,12 +678,15 @@ class Instrument:
     def updateBooks(self,msg):#get pushData
         #msg = OKExMessage.pushData()
         if(msg.arg["channel"]=="books"):#snapshot or update
-            if(self.ts < msg.data.ts):
-                self.ts = msg.data.ts
-            if(msg.arg["action"]=="snapshot"):
-                self.Books.initializeBoard(msg, self.bookDepth)
-            elif(msg.arg["action"]=="update"):
-                self.Books.updateBooks(msg)
+            for d in msg.data:
+                if(self.ts < d.ts):
+                    self.ts = d.ts
+                if(msg.arg["action"]=="snapshot"):
+                    #print(self.instId)
+                    self.Books.initializeBoard(msg, self.bookDepth)
+                    self.Books.instId = self.instId
+                elif(msg.arg["action"]=="update"):
+                    self.Books.updateBooks(msg)
         elif(msg.arg["channel"]=="trades"):
             self.updateTrades(msg)
             
