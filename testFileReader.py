@@ -40,6 +40,8 @@ line = ""
 i = 0
 while(line!="\0"):
     line = filereader.readline()
+    if(line=="\0"):
+        break
     obj = OKExParser.Parse(line)
     if(obj.dataType=="push"):
         if(obj.arg["instId"] in insList):

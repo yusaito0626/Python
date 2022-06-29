@@ -21,6 +21,11 @@ class pushData:
         self.arg = {}
         self.data = []
         
+    def init(self):
+        self.dataType = ""
+        self.arg.clear()
+        self.data.clear()
+        
     def ToString(self):
         msg = self.dataType + ","
         for a in self.arg.values():
@@ -35,6 +40,25 @@ class pushData:
 
 class odrTicket:
     def __init__(self):
+        self.instId = ""
+        self.tdMode = OKExEnums.tradeMode.NONE
+        self.ccy = ""
+        self.ordId = ""
+        self.clOrdId = ""
+        self.tag = ""
+        self.side = OKExEnums.side.NONE
+        self.posSide = OKExEnums.positionSide.NONE
+        self.ordType = OKExEnums.orderType.NONE
+        self.sz = 0
+        self.px = 0
+        self.reduceOnly = False
+        self.tgtCcy = OKExEnums.quantityType.NONE
+        self.banAmend = False
+    #Only Amend Orders
+        self.cxlOnFail = False
+        self.reqId = ""
+        
+    def init(self):
         self.instId = ""
         self.tdMode = OKExEnums.tradeMode.NONE
         self.ccy = ""
@@ -68,6 +92,14 @@ class ackTicket:
         self.sCode = 0
         self.sMsg = ""
         self.reqId = ""
+        
+    def init(self):
+        self.ordId = ""
+        self.clOrdId = ""
+        self.tag = ""
+        self.sCode = 0
+        self.sMsg = ""
+        self.reqId = ""
     
     def ToString(self):
         return self.ordId + "," + self.clOrderId + "," + self.tag \
@@ -86,6 +118,17 @@ class msgOrder:
         #Add another as needed.
         self.ackList.append(ackTicket())
         self.orderList.append(odrTicket())
+        
+    def init(self,acktkt,ordtkt):
+        self.dataType = "order"
+        self.uniId = ""
+        self.op = ""
+        self.errCode = 0
+        self.errMsg = ""
+        self.ackList.clear()
+        self.orderList.clear()
+        self.ackList.append(acktkt)
+        self.orderList.append(ordtkt)
     
     def ToString(self):
         msg = self.uniId + "," + self.op + "," + str(self.errCode) + "," + self.errMsg + ","
@@ -597,6 +640,14 @@ class dataTrade:
         self.sz = 0.0
         self.side = OKExEnums.side.NONE
         self.ts = 0
+        
+    def init(self):
+        self.instId = ""
+        self.tradeId = ""
+        self.px = 0.0
+        self.sz = 0.0
+        self.side = OKExEnums.side.NONE
+        self.ts = 0
     
 class dataEstimatedDelivery:
     def __init__(self):
@@ -635,6 +686,12 @@ class book:
         self.LiqOrd = 0.0
         self.NumOfOrd = 0
         
+    def init(self):
+        self.px = 0.0
+        self.qty = 0.0
+        self.LiqOrd = 0.0
+        self.NumOfOrd = 0
+        
     def ToString(self):
         return str(self.px) + "," + str(self.qty) + "," + str(self.LiqOrd) + "," + str(self.NumOfOrd)
     
@@ -642,6 +699,12 @@ class dataOrderBook:
     def __init__(self):
         self.asks = []#List of book
         self.bids = []#List of book
+        self.ts = 0
+        self.checksum = 0
+        
+    def init(self):
+        self.asks.clear()
+        self.bids.clear()
         self.ts = 0
         self.checksum = 0
         
