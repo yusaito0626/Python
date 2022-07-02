@@ -6,9 +6,9 @@ Created on Wed Jun 22 22:03:04 2022
 """
 
 import math
-from OKEx.Utils import params
-from OKEx import OKExInstrument
-from OKEx import OKExOMS
+from Utils import params
+import OKExInstrument
+import OKExOMS
 
 class Optimizer:
     
@@ -18,7 +18,7 @@ class Optimizer:
     def initialize(self,oms):
         self.oms = oms
         
-    def calcBookImbalance(ins):
+    def calcBookImbalance(self,ins):
         bid = ins.Books.BestBid
         ask = ins.Books.BestAsk
         minsum = 0.01
@@ -43,13 +43,12 @@ class Optimizer:
             bidsum = minsum
         if(asksum < minsum):
             asksum = minsum
-            
         return math.log(asksum / bidsum)
     
     def calcFactors(self,ins):
-        ins = OKExInstrument.Instrument()
         ins.updateRings()
         ins.bookImbalance = self.calcBookImbalance(ins)
+        #print(ins.bookImbalance)
         if(ins.ringDataCount > params.RVPeriod * 60):
             ins.currentRV = math.pow(ins.realizedVolatility - ins.rvRing[ins.ringIdx].relative(-params.RVPeriod),0.5)
         

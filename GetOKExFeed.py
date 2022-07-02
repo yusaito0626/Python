@@ -23,7 +23,7 @@ if __name__ == "__main__":
     
     today = datetime.datetime.utcnow()
     
-    masterfilename = datapath + "master\\OKExMaster_"+ today.date().isoformat() + ".txt"
+    masterfilename = datapath + "master\\tempOKExMaster_"+ today.date().isoformat() + ".txt"
     master = open(masterfilename,'w')
     
     insList = list()
@@ -35,13 +35,13 @@ if __name__ == "__main__":
     for elem in obj['data']:
         insList.append(elem['instId'])
         master.write(json.dumps(elem) + "\n")
-    fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=BTC-USD"
+    fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=BTC-USDT"
     response = requests.get(rest_url+fut_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
         master.write(json.dumps(elem) + "\n")
-    swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=BTC-USD"
+    swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=BTC-USDT"
     response = requests.get(rest_url+swap_reqmsg)
     obj=response.json()
     for elem in obj['data']:
@@ -57,13 +57,13 @@ if __name__ == "__main__":
     for elem in obj['data']:
         insList.append(elem['instId'])
         master.write(json.dumps(elem) + "\n")
-    fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=ETH-USD"
+    fut_reqmsg="api/v5/public/instruments?instType=FUTURES&uly=ETH-USDT"
     response = requests.get(rest_url+fut_reqmsg)
     obj=response.json()
     for elem in obj['data']:
         insList.append(elem['instId'])
         master.write(json.dumps(elem) + "\n")
-    swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=ETH-USD"
+    swap_reqmsg="api/v5/public/instruments?instType=SWAP&uly=ETH-USDT"
     response = requests.get(rest_url+swap_reqmsg)
     obj=response.json()
     for elem in obj['data']:

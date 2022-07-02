@@ -10,3 +10,5 @@ posMAPeriod = 30
 midMAPeriod = 30
 biTicks = 100
 biDecayingParam = 2000
+
+latency = 100

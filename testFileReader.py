@@ -11,8 +11,11 @@ import datetime
 import OKExFileReader
 import OKExParser
 import OKExInstrument
+import OKExOptimizer
 
 filereader = OKExFileReader.FeedFileReader()
+parser = OKExParser.OKExParser()
+optimizer = OKExOptimizer.Optimizer()
 
 filepath = "D:\\OKExFeed\\feed"
 filename = "OKExFeed_YYYY-MM-DD.log"
@@ -25,7 +28,7 @@ today = datetime.datetime.utcnow()
 print(today.isoformat())
 
 masterfilepath = "D:\\OKExFeed\\master"
-masterfilename = "OKExMaster_YYYY-MM-DD.txt"
+masterfilename = "OKExMaster_YYYY-MM-DD_test.txt"
 filereader.setMasterFile(masterfilepath, masterfilename)
 
 insList = filereader.readMasterFile(day)
@@ -42,14 +45,16 @@ while(line!="\0"):
     line = filereader.readline()
     if(line=="\0"):
         break
-    obj = OKExParser.Parse(line)
+    obj = parser.Parse(line)
     if(obj.dataType=="push"):
         if(obj.arg["instId"] in insList):
             ins = insList[obj.arg["instId"]]
             ins.updateBooks(obj)
+            optimizer.calcFactors(ins)
+    parser.pushPDataObj(obj)
     i += 1
     if(i > 1000000):
-        print(line)
+        #print(line)
         i = 0
     
 print("Finished reading.")

@@ -11,7 +11,7 @@ from OKEx import OKExMessage
 
 
 class OKExParser:
-    def __init(self):
+    def __init__(self):
         self.PDATAQSIZE = 100000
         self.ORDBOOKQSIZE = 100000
         self.BOOKQSIZE = 1000000

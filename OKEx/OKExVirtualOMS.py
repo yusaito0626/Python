@@ -1,51 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jun  4 20:25:42 2022
+Created on Thu Jun 30 21:47:04 2022
 
 @author: yusai
 """
 
-#WebSocket
-import websocket
-import time
-import hmac
-import hashlib
-import base64
 import queue
-import threading
 
 import OKExEnums
 import OKExMessage
 import OKExOrder
+from Utils import params
 
-class OMS:
-    
-    def StartCheckingMsg(self):#Create a thread for this function
-        print("OMS starts listening msg.")
-        try:
-            while True:
-                msg = self.oms.recv()
-                if(msg==""):#websocket has been closed
-                    print("The websocket disconnected.")
-                    self.ackQueue.put("END")
-                    self.isListening = False
-                    break
-                else:
-                    self.ackQueue.put(msg)
-        except:
-            print("Error Occured. Return ERROR text.")
-            self.ackQueue.put("ERROR")
-            self.isListening = False
+class VirtualOMS:
 
     def __init__(self):
-        self.oms = websocket.WebSocket()
-
-        self.__url = ""
-        self.__apiKey = ""
-        self.__passphrase = ""
-        self.__secretKey = ""
     
-        self.ackQueue = queue.Queue()
+        self.waitQueue = queue.Queue()
+        self.waitPeek = None
         self.isListening = False
         self.ordIndex = 0
         
@@ -70,131 +42,25 @@ class OMS:
         while(i < self.numOfMsgOrd):
             self.msgOrdPool.put(OKExMessage.msgOrder())
             i += 1
-            
-        self.AckCheckingTh = threading.Thread(target=self.StartCheckingMsg,args=())
-        
-        
-    def startListeningMsg(self):
-        self.AckCheckingTh = threading.Thread(target=self.StartCheckingMsg,args=())
-        self.isListening = True
-        self.AckCheckingTh.start()
-        
-    def readKeyFile(self,filename):
-        f= open(filename,'r')
-        line = ""
-        idx = -1
-        key = ""
-        value = ""
-        while f:
-            line = f.readline()
-            idx = line.find('=')
-            if(idx >= 0):
-                line = line.strip()#Erase \n
-                key = line[0:idx]
-                value = line[idx+1:]
-                if(key=="apiKey"):
-                    self.__apiKey = value
-                elif(key=="passphrase"):
-                    self.__passphrase = value
-                elif(key=="secretKey"):
-                    self.__secretKey = value
-                elif(key=="URL"):
-                    self.__url = value
-            if(not line):
-                f.close()
-                break
-
-    def SetKeys(self,apiKey,passphrase,secretKey):
-        self.__apiKey = apiKey
-        self.__passphrase = passphrase
-        self.__secretKey = secretKey
+        self.numOfAckTkt = 200000
+        self.ackPool = queue.LifoQueue(self.numOfAckObj * 2)
+        i = 0
+        while(i < self.numOfAckTkt):
+            self.ackPool.put(OKExMessage.ackTicket())
     
-    def SetURL(self,url):
-        self.__url = url
-        
-    def GetURL(self):
-        return self.__url
-    
-    def Connect(self):
-        if(self.__url==""):
-            return "Error: Invalid URL"
-        if(self.__apiKey==""):
-            return "Error: Invalid API Key"
-        if(self.__passphrase==""):
-            return "Error: Invalid Pass Phrase"
-        if(self.__secretKey==""):
-            return "Error: Invalid Secret Key"
-        tm = str(int(time.time()))
-        sign = self.__GetSign(tm,self.__secretKey,"GET","/users/self/verify","")
-        LoginMsg = "{\"op\":\"login\",\"args\":[{\"apiKey\":\"" + self.__apiKey + "\",\"passphrase\":\"" + self.__passphrase + "\",\"timestamp\":\"" + tm + "\",\"sign\":\"" + sign + "\"}]}"
-    
-        self.oms.connect(self.__url)
-        self.oms.send(LoginMsg)
-    
-        msg =  self.oms.recv()
-        if(self.isListening == False):
-            self.startListeningMsg()
-        return msg
-    
-    def ConnectWithInfo(self,url,apiKey,passphrase,secretKey):
-        self.__apiKey = apiKey
-        self.__passphrase = passphrase
-        self.__secretKey = secretKey
-        self.__url = url
-        if(self.__url==""):
-            return "Error: Invalid URL"
-        if(self.__apiKey==""):
-            return "Error: Invalid API Key"
-        if(self.__passphrase==""):
-            return "Error: Invalid Pass Phrase"
-        if(self.__secretKey==""):
-            return "Error: Invalid Secret Key"
-        tm = str(int(time.time()))
-        sign = self.__GetSign(tm,self.__secretKey,"GET","/users/self/verify","")
-        LoginMsg = "{\"op\":\"login\",\"args\":[{\"apiKey\":\"" + self.__apiKey + "\",\"passphrase\":\"" + self.__passphrase + "\",\"timestamp\":\"" + tm + "\",\"sign\":\"" + sign + "\"}]}"
-    
-        self.oms.connect(self.__url)
-        self.oms.send(LoginMsg)
-
-        msg =  self.oms.recv()
-        if(self.isListening == False):
-            self.startListeningMsg()
-        return msg
-    
-    def Disconnect(self):
-        self.oms.close()
-        self.oms = websocket.WebSocket()
-    
-    def recv(self):
+    def recv(self,time):
         if(self.ackQueue.empty()):
             return ""
         else:
             return self.ackQueue.get_nowait()
-    
-    def __Subscribe(self,args):#args starts with [
-        msg = "{\"op\":\"subscribe\",\"args\":" + args + "}"
-        self.oms.send(msg)
-        #Do not receive ack here since other subscription may exist already.
-    
-    def subscribeAccount(self,ccy=""):
-        args=""
-        if ccy!="":
-            args = "[{\"channel\":\"account\",\"ccy\":\"" + ccy + "\"}]"
-        else:
-            args = "[{\"channel\":\"account\"}]"
-        self.__Subscribe(args)
-    
-    def subscribeBalAndPos(self):
-        args = "[{\"channel\":\"balance_and_position\"}]"
-        self.__Subscribe(args)
-        
+            
     def getId(self,instId):
         output = instId.replace('-','') + "{:06}".format(self.ordIndex)
         self.ordIndex += 1
         return output
         
     #Store tkt objects in the queue and return order object
-    def sendNewOrder(self,ins,tdMode,side,ordType,sz,px=0,ccy=""):
+    def sendNewOrder(self,tm,ins,tdMode,side,ordType,sz,px=0,ccy=""):
         #If you need specify other args, add them.
         odr = self.orderPool.get()
         strId = self.getId(ins.instId)
@@ -278,7 +144,8 @@ class OMS:
         if(strPx != ""):
             msg += "," + strPx
         msg+="}]}"
-        self.oms.send(msg)
+        #self.oms.send(msg)
+        #See Ticket Queue instead of checking ack
         msgOrd = self.msgOrdPool.get()
         msgOrd.uniId = strId
         msgOrd.op = "order"
@@ -289,6 +156,7 @@ class OMS:
         msgOrd.orderList[0].sz = sz
         msgOrd.orderList[0].px = px
         self.tktQueue.put(msgOrd)
+        self.waitQueue.put(msgOrd)
         #odr.orderList.append(tkt)
         odr.clOrdId = strId
         odr.side = side
@@ -300,7 +168,7 @@ class OMS:
         self.ordList[odr.clOrdId] = odr
         return odr
         
-    def sendModOrder(self,ins,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change
+    def sendModOrder(self,tm,ins,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change
         odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
@@ -329,6 +197,7 @@ class OMS:
         msgOrd.orderList[0].sz = newSz
         msgOrd.orderList[0].px = newPx
         self.tktQueue.put(msgOrd)
+        self.waitQueue.put(msgOrd)
         odr.status = OKExEnums.orderState.WAIT_AMD
         odr.newSz = newSz
         odr.newPx = newPx
@@ -337,7 +206,7 @@ class OMS:
         self.ordList[odr.clOrdId] = odr
         return odr
             
-    def sendCanOrder(self,ins,clOrdId):
+    def sendCanOrder(self,tm,ins,clOrdId):
         odr = self.liveOrdList.get(clOrdId,self.nullOrd)
         if(odr.px < 0):
             return odr#nullOrd
@@ -358,6 +227,7 @@ class OMS:
         msgOrd.orderList[0].clOrdId = clOrdId
         
         self.tktQueue.put(msgOrd)
+        self.waitQueue.put(msgOrd)
         odr.status = OKExEnums.orderState.WAIT_CAN
         odr.live = False
         odr.newSz = 0.0
@@ -366,12 +236,64 @@ class OMS:
         self.liveOrdList[odr.clOrdId] = odr
         self.ordList[odr.clOrdId] = odr
         return odr
-       
-    def __GetSign(self,strtime,key,method,requestPath,body=""):
-        if(strtime ==""):
-            strtime = str(time.time())
-        rawmsg = strtime + method + requestPath + body
-        hmacmsg = hmac.new(key.encode(), rawmsg.encode(), hashlib.sha256)
-        return base64.b64encode(hmacmsg.digest()).decode()
 
+    def createAck(self,tm,msg):
+        msgOrd = self.msgOrdPool.get()
+        msgOrd.uniId = msg.uniId
+        msgOrd.op = msg.op
+        msgOrd.code = 0
+        msgOrd.msg = ""
+        i = 0
+        for o in msg.orderList:
+            ack = msgOrd.ackList[0]
+            if(i > 0):
+                ack = self.ackPool.get()
+                msgOrd.ackList.append(ack)
+            ack.clOrdId = o.clOrdId
+            ack.sCode = 0
+            ack.sMsg = ""
+            ack.reqId = ""
+        return msgOrd
     
+    def checkWaitQueue(self,tm):
+        if(self.waitPeek==None):
+            if(self.waitQueue.empty()):
+                return
+            else:
+                self.waitPeek = self.waitQueue.get()
+                
+        if(tm >= self.waitPeek.tm + params.latency):
+            while(not self.waitQueue.empty()):
+                ack = self.createAck(tm,self.waitPeek)
+                self.ackQueue.put(ack)
+                self.waitPeek = self.waitQueue.get()
+                if(tm < self.waitPeek.tm + params.latency):
+                    break
+            if(self.waitQueue.empty() and tm >= self.waitPeek.tm + params.latency):
+                ack = self.createAck(tm,self.waitPeek)
+                self.ackQueue.put(ack)
+                self.waitPeek = None
+                    
+    def pushOrdObj(self,obj):
+        o_temp = None
+        a_temp = None
+        i = 0
+        for o in obj.orderList:
+            o.init()
+            if(i == 0):
+                o_temp = o
+                i += 1
+            else:
+                self.msgOrdPool.put(o)
+        i = 0
+        for a in obj.ackList:
+            a.init()
+            if(i == 0):
+                a_temp = a
+                i += 1
+            else:
+                self.ackPool.put(a)
+        obj.init(a_temp,o_temp)
+        self.orderPool.put(obj)
+            
+                    

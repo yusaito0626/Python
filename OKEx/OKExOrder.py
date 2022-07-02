@@ -5,7 +5,7 @@ Created on Mon Jun  6 21:58:19 2022
 @author: yusai
 """
 
-from OKEx import OKExEnums
+import OKExEnums
 
 class order:
     def __init__(self):
@@ -19,6 +19,8 @@ class order:
         self.openSz = 0.0
         self.avgPx = 0.0
         self.live = False#From receving ack to filled or sending cancel
+        
+        self.priorQuantity = 0
         
         #Store amending order infomation. Update px/sz when receiving ack.
         self.newPx = 0.0
