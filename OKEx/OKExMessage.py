@@ -4,7 +4,7 @@ Created on Mon Jun  6 19:58:10 2022
 
 @author: yusai
 """
-from OKEx import OKExEnums
+import OKExEnums
 
 class AckSubscribe:    
     def __init__(self):
@@ -186,7 +186,7 @@ class dataAccount:
         self.details = []#List of dataAccDetail
     
 class dataPosition:
-    def __init__(self):
+    def __init__(self,dic=None):
         self.instType = OKExEnums.instType.NONE
         self.mgnMode = OKExEnums.mgnMode.NONE
         self.posSide = OKExEnums.positionSide.NONE
@@ -194,6 +194,7 @@ class dataPosition:
         self.baseBal = 0.0
         self.quoteBal = 0.0
         self.posCcy = ""
+        self.posId = ""
         self.availPos = 0.0
         self.avgPx = 0.0
         self.upl = 0.0
@@ -227,19 +228,117 @@ class dataPosition:
         self.cTime = 0
         self.uTime = 0
         self.pTime = 0
+        if(dic!=None):
+            self.setData(dic)            
+
+            
+    def setData(self,dic):
+        if(dic["instType"] == "SPOT"):
+            #Spot position data should not exist? Should be in Balance data?
+            self.instType = OKExEnums.instType.SPOT
+        elif(dic["instType"] == "SWAP"):
+            self.instType = OKExEnums.instType.SWAP
+            self.__setSWAPData(dic)
+        elif(dic["instType"] == "FUTURES"):
+            self.instType = OKExEnums.instType.FUTURES
+            self.__setFUTURESData(dic)
+        elif(dic["instType"] == "MARGIN"):
+            self.instType = OKExEnums.instType.MARGIN
+        elif(dic["instType"] == "OPTION"):
+            self.instType = OKExEnums.instType.OPTION
     
+    def __setSWAPData(self,dic):
+        self.instId = dic["instId"]
+        self.ccy = dic["ccy"]
+        if(dic["mgnMode"] == "cross"):
+            self.mgnMode = OKExEnums.mgnMode.CROSS
+        elif(dic["mgnMode"] == "isolated"):
+            self.mgnMode = OKExEnums.mgnMode.ISOLATED
+        self.posId = dic["posId"]
+        self.tradeId = dic["tradeId"]
+        if(dic["posSide"] == "long"):
+            self.posSide = OKExEnums.positionSide.LONG
+        elif(dic["posSide"] == "short"):
+            self.posSide = OKExEnums.positionSide.SHORT
+        elif(dic["posSide"] == "net"):
+            self.posSide = OKExEnums.positionSide.NET
+        self.posCcy = dic["posCcy"]
+        self.avgPx = float(dic["avgPx"])
+        self.pos = float(dic["pos"])
+        self.uTime = float(dic["uTime"])
+        
+    def __setFUTURESData(self,dic):
+        self.instId = dic["instId"]
+        self.ccy = dic["ccy"]
+        if(dic["mgnMode"] == "cross"):
+            self.mgnMode = OKExEnums.mgnMode.CROSS
+        elif(dic["mgnMode"] == "isolated"):
+            self.mgnMode = OKExEnums.mgnMode.ISOLATED
+        self.posId = dic["posId"]
+        self.tradeId = dic["tradeId"]
+        if(dic["posSide"] == "long"):
+            self.posSide = OKExEnums.positionSide.LONG
+        elif(dic["posSide"] == "short"):
+            self.posSide = OKExEnums.positionSide.SHORT
+        elif(dic["posSide"] == "net"):
+            self.posSide = OKExEnums.positionSide.NET
+        self.posCcy = dic["posCcy"]
+        self.avgPx = float(dic["avgPx"])
+        self.pos = float(dic["pos"])
+        self.uTime = float(dic["uTime"])
+        
+    def ToString(self):
+        return str(self.instType)+ "," + str(self.mgnMode) + "," + \
+            str(self.posSide) + "," + str(self.pos) + "," + \
+            str(self.baseBal) + "," + str(self.quoteBal) + "," + \
+            self.posCcy + "," + self.posId + "," + str(self.availPos) + "," + \
+            str(self.avgPx) + "," + str(self.upl) + "," + \
+            str(self.uplRatio) + "," + self.instId + "," + \
+            str(self.lever) + "," + str(self.liqPx) + "," + \
+            str(self.markPx) + "," + str(self.imr) + "," + \
+            str(self.margin) + "," + str(self.mgnRatio) + "," + \
+            str(self.mmr) + "," + str(self.liab) + "," + str(self.liabCcy) + "," + \
+            str(self.interest) + "," + str(self.tradeId) + "," + str(self.notionalUsd)  + "," + \
+            str(self.optVal) + "," + str(self.adl) + "," + self.ccy + "," + \
+            str(self.last) + "," + str(self.usdPx) + "," + str(self.deltaBS) + "," + \
+            str(self.deltaPA) + "," + str(self.gammaBS) + "," + \
+            str(self.gammaPA) + "," + str(self.thetaBS) + "," + \
+            str(self.thetaPA) + "," + str(self.vegaBS) + "," + \
+            str(self.vegaPA) + "," + str(self.cTime) + "," + \
+            str(self.uTime) + "," + str(self.pTime)
 class dataBal:
-    def __init__(self):
-        self.ccy = ""
-        self.cashBal = 0.0
-        self.uTime = 0
-    
+    def __init__(self,dic=None):
+        if(dic==None):
+            self.ccy = ""
+            self.cashBal = 0.0
+            self.uTime = 0
+        else:
+            self.setData(dic)
+                
+    def setData(self,dic):
+        self.ccy = dic["ccy"]
+        self.cashBal = float(dic["cashBal"])
+        self.uTime = int(dic["uTime"])
+        
+    def ToString(self):
+        return self.ccy + "," + str(self.cashBal) + "," + str(self.uTime)
+            
 class dataBalandPos:
     def __init__(self):
         self.pTime = 0
         self.eventType = OKExEnums.eventType.NONE
         self.balList = []#List of dataBal
         self.posList = []#List of dataPosition
+        
+    def ToString(self):
+        out = str(self.eventType) + "," + str(self.pTime)
+        out += " self.Balance:"
+        for b in self.balList:
+            out += "{" + b.ToString() + "}"
+        out+= " Position:"
+        for p in self.posList:
+            out += "{" + p.ToString() + "}"
+        return out
     
 class dataOrder:
     def __init__(self):

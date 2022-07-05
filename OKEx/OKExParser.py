@@ -167,7 +167,17 @@ class OKExParser:
         
             return pData
         elif(js["arg"]["channel"]=="balance_and_position"):
-        
+            for data in js["data"]:
+                obj = OKExMessage.dataBalandPos()
+                obj.pTime = data["pTime"]
+                obj.eventType = data["eventType"]
+                for bal in data["balData"]:
+                    balobj = OKExMessage.dataBal(bal)
+                    obj.balList.append(balobj)
+                for pos in data["posData"]:
+                    posobj = OKExMessage.dataPosition(pos)
+                    obj.posList.append(posobj)
+                pData.data.append(obj)
             return pData
         elif(js["arg"]["channel"]=="orders"):
             

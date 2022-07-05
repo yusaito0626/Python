@@ -19,23 +19,23 @@ class Optimizer:
         self.oms = oms
         
     def calcBookImbalance(self,ins):
-        bid = ins.Books.BestBid
-        ask = ins.Books.BestAsk
+        bid = ins.Books.booksBestBid
+        ask = ins.Books.booksBestAsk
         minsum = 0.01
         bidsum = 0
         asksum = 0
         i = 0
         while(i < params.biTicks):
             if(bid.idx > 0):
-                bidsum += bid.sz * math.exp(-math.log(ins.Books.BestBid.px / bid.px) * params.biDecayingParam)
-                if(bid.next > 0):
-                    bid = ins.Books.bids[bid.next]
+                bidsum += bid.sz * math.exp(-math.log(ins.Books.booksBestBid.px / bid.px) * params.biDecayingParam)
+                if(bid.px - 1 in ins.Books.books):
+                    bid = ins.Books.books[bid.px - 1]
                 else:
                     bid = ins.Books.bend
             if(ask.idx > 0):
-                asksum += ask.sz * math.exp(-math.log(ask.px / ins.Books.BestAsk.px) * params.biDecayingParam)
-                if(ask.next > 0):
-                    ask = ins.Books.asks[ask.next]
+                asksum += ask.sz * math.exp(-math.log(ask.px / ins.Books.booksBestAsk.px) * params.biDecayingParam)
+                if(ask.px + 1 in ins.Books.books):
+                    ask = ins.Books.books[ask.px + 1]
                 else:
                     ask = ins.Books.aend
             i += 1

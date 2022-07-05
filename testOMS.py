@@ -91,7 +91,7 @@ if __name__ == "__main__":
     
     oms.subscribeBalAndPos()
     
-    ins = insList["BTC-USD-SWAP"]
+    ins = insList["BTC-USDT"]
     
     odr = oms.sendNewOrder(ins, OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 2,19500.0,"USDT")
     time.sleep(1)
