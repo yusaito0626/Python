@@ -26,13 +26,13 @@ class Optimizer:
         asksum = 0
         i = 0
         while(i < params.biTicks):
-            if(bid.idx > 0):
+            if(bid.idx >= 0):
                 bidsum += bid.sz * math.exp(-math.log(ins.Books.booksBestBid.px / bid.px) * params.biDecayingParam)
                 if(bid.px - 1 in ins.Books.books):
                     bid = ins.Books.books[bid.px - 1]
                 else:
                     bid = ins.Books.bend
-            if(ask.idx > 0):
+            if(ask.idx >= 0):
                 asksum += ask.sz * math.exp(-math.log(ask.px / ins.Books.booksBestAsk.px) * params.biDecayingParam)
                 if(ask.px + 1 in ins.Books.books):
                     ask = ins.Books.books[ask.px + 1]
@@ -48,8 +48,24 @@ class Optimizer:
     def calcFactors(self,ins):
         ins.updateRings()
         ins.bookImbalance = self.calcBookImbalance(ins)
-        #print(ins.bookImbalance)
+        #print(ins.instId + ":" + str(ins.bookImbalance))
         if(ins.ringDataCount > params.RVPeriod * 60):
             ins.currentRV = math.pow(ins.realizedVolatility - ins.rvRing[ins.ringIdx].relative(-params.RVPeriod),0.5)
         
-    #def Optimize(self,ins):
+    def Optimize(self,ins):
+        ins = OKExInstrument.Instrument()
+        #Sp:Volatility, Spread
+        Spr = ins.CurrentRV * ins.Mid * 2
+        if(Spr < ins.minSp):
+            Spr = ins.minSp
+        
+        Skew = 0
+        posRatio = ins.pos / ins.maxPos
+        if(posRatio > 0.3):#Long
+            if(posRatio > 1):
+                posRatio = 1
+            Skew -= posRatio * Spr / 2
+        elif(posRatio <  - 0.3):
+            if(posRatio < -1):
+                posRatio = -1
+            Skew -= posRatio * Spr / 2

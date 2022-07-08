@@ -748,6 +748,8 @@ class dataTrade:
         self.side = OKExEnums.side.NONE
         self.ts = 0
     
+    def ToString(self):
+        return self.instId + "," + self.tradeId + "," + str(self.side) + "," + str(self.px) + "," + str(self.sz) + "," + str(self.ts)
 class dataEstimatedDelivery:
     def __init__(self):
         self.instType = OKExEnums.instType.NONE

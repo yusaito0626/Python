@@ -626,7 +626,7 @@ class Board:
                             self.booksBestAsk = temp_ask
                         else:
                             print("Couldn't find BestAsk")
-                            print(self.printBooks(20))
+                            #print(self.printBooks(20))
                     if(self.booksBestBid.px -self.minBid.px < 2000):
                         self.reshapeBooks()
                 #bidx = self.findBook(OKExEnums.side.BUY,int(b.px * self.priceUnit))
@@ -715,7 +715,7 @@ class Board:
                             self.booksBestBid = temp_bid
                         else:
                             print("Couldn't find BestBid")
-                            print(self.printBooks(20))
+                            #print(self.printBooks(20))
                     if(self.maxAsk.px - self.booksBestAsk.px < 2000):
                         self.reshapeBooks()
                 #aidx = self.findBook(OKExEnums.side.SELL,int(a.px * self.priceUnit))
@@ -776,7 +776,7 @@ class Board:
             #print(len(self.asks))
         if(self.booksBestAsk.px <= self.booksBestBid.px):
             print("Ask:" + str(self.booksBestAsk.px) + "  Bid:" + str(self.booksBestBid.px))
-            print(self.printBooks(20))
+            #print(self.printBooks(20))
 class Instrument:
     
     def __init__(self):
@@ -824,6 +824,18 @@ class Instrument:
         self.execBidVol = 0.0
         self.execAskAmt = 0.0#To Calc VWAP
         self.execBidAmt = 0.0#To Calc VWAP
+        
+        self.avgSqrBookImbalance = 0.0
+        self.avgSpread = 0.0
+        self.startTimeBI = 0
+        self.lastTimeBI= 0
+        self.startTimeSP = 0
+        self.lastTimeSP= 0
+        
+        #From File
+        self.histVolatility = 0.0
+        self.histAvgSpread = 0
+        self.maxPos = 0
         
         self.minSp = 0
         self.topOfBook = 0.0
@@ -933,13 +945,15 @@ class Instrument:
             self.Books.priceUnit = 1 / self.tickSz
             
     def updateTrades(self,msg):
+        #print("Update Trades Called")
         #self.instId = ""
         #self.tradeId = ""
         #self.px = 0.0
         #self.sz = 0.0
         #self.side = OKExEnums.side.NONE
         #self.ts = 0
-        msg = OKExMessage.pushData()
+        #msg = OKExMessage.pushData()
+        #print(msg.ToString())
         for d in msg.data:
             if(d.ts > self.ts):
                 self.ts = d.ts
@@ -969,13 +983,35 @@ class Instrument:
                     self.execBidVol += d.sz * self.ctVal
                     self.execBidAmt += d.px * d.sz * self.ctVal
             
+    def calcHistData(self):        
+        if(self.startTimeBI == 0):
+            self.startTimeBI = self.ts
+            self.lastTimeBI = self.ts
+        else:
+            self.avgSqrBookImbalance += (self.ts - self.lastTimeBI) * self.bookImbalance * self.bookImbalance
+            self.lastTimeBI = self.ts
+        if(self.startTimeSP == 0):
+            self.startTimeSP = self.ts
+            self.lastTimeSP = self.ts
+        elif(self.Books.booksBestAsk.px > 0 and self.Books.booksBestBid.px > 0 and self.Books.booksBestAsk.px  > self.Books.booksBestBid.px):
+            self.avgSpread += (self.ts - self.lastTimeSP) * (self.Books.booksBestAsk.px - self.Books.booksBestBid.px)
+            self.lastTimeSP = self.ts
             
+    def outputHistData(self):
+        self.avgSpread /= self.lastTimeSP - self.startTimeSP
+        self.avgSqrBookImbalance /= self.lastTimeBI - self.startTimeBI
+        return  self.instId + "," + str(self.avgSpread) + ","  + \
+            str(self.realizedVolatility) + "," + str(self.avgSqrBookImbalance) + ","  + \
+            str(self.execAskCnt) + ","  + str(self.execAskVol)  + ","  + str(self.execAskAmt) + "," + \
+            str(self.execBidCnt) + ","  + str(self.execBidVol)  + ","  + str(self.execBidAmt)
+    
     def updateBooks(self,msg):#get pushData
         #msg = OKExMessage.pushData()
         if(msg.arg["channel"]=="books"):#snapshot or update
             for d in msg.data:
                 if(self.ts < d.ts):
                     self.ts = d.ts
+                    self.calcHistData()
                 if(msg.arg["action"]=="snapshot"):
                     #print(self.instId)
                     self.Books.initializeBoard(msg, self.bookDepth)

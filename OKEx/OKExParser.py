@@ -7,7 +7,8 @@ Created on Thu Jun  9 18:31:58 2022
 
 import json
 import queue
-from OKEx import OKExMessage
+import OKExEnums
+import OKExMessage
 
 
 class OKExParser:
@@ -18,12 +19,15 @@ class OKExParser:
         self.ORDQSIZE = 100000
         self.ACKTKTQSIZE = 10000
         self.SNDTKTQSIZE = 10000
+        self.TRADEQSIZE = 100000
         self.pDataPool = queue.LifoQueue(self.PDATAQSIZE)
         self.ordBookPool = queue.LifoQueue(self.ORDBOOKQSIZE)
         self.bookPool = queue.LifoQueue(self.BOOKQSIZE)
         self.ordPool = queue.LifoQueue(self.ORDQSIZE)
         self.ackTktPool = queue.LifoQueue(self.ACKTKTQSIZE)
         self.sndtktPool = queue.LifoQueue(self.SNDTKTQSIZE)
+        self.tradePool = queue.LifoQueue(self.TRADEQSIZE)
+        
         i = 0
         while(True):
             chk = False
@@ -44,6 +48,9 @@ class OKExParser:
                 chk = True
             if(i < self.SNDTKTQSIZE):
                 self.sndtktPool.put(OKExMessage.odrTicket())
+                chk = True
+            if(i < self.TRADEQSIZE):
+                self.tradePool.put(OKExMessage.dataTrade())
                 chk = True
             if(not chk):
                 break
@@ -227,9 +234,6 @@ class OKExParser:
         elif(js["arg"]["channel"][0:6]=="candle"):
         
             return pData
-        elif(js["arg"]["channel"]=="trades"):
-        
-            return pData
         elif(js["arg"]["channel"]=="estimated-price"):
         
             return pData
@@ -263,6 +267,21 @@ class OKExParser:
                     bk.NumOfOrd = int(b[3])
                     ordbook.bids.append(bk)
                 pData.data.append(ordbook)
+            return pData
+        elif(js["arg"]["channel"]=="trades"):
+            for data in js["data"]:#data contains asks,bids,ts,checksum
+                trade = self.tradePool.get()
+                trade.ts = int(data["ts"])
+                trade.instId = data["instId"]
+                trade.tradeId = data["tradeId"]
+                trade.px = float(data["px"])
+                trade.sz = float(data["sz"])
+                if(data["side"]=="buy"):
+                    trade.side = OKExEnums.side.BUY
+                elif(data["side"]=="sell"):
+                    trade.side = OKExEnums.side.SELL
+                
+                pData.data.append(trade)
             return pData
         elif(js["arg"]["channel"]=="opt-summary"):
         
@@ -330,6 +349,11 @@ class OKExParser:
                     self.bookPool.put(b)
                 d.init()
                 self.ordBookPool.put(d)
+        elif(obj.arg["channel"]=="trades"):
+            for d in obj.data:
+                #trade
+                d.init()
+                self.tradePool.put(d)
         obj.init()
         self.pDataPool.put(obj)
     

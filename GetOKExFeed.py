@@ -21,9 +21,11 @@ if __name__ == "__main__":
     datapath = "D:\\OKExFeed\\"
     url = "wss://ws.okx.com:8443/ws/v5/public"
     
+    dateFile = datapath + "date.txt"
+    
     today = datetime.datetime.utcnow()
     
-    masterfilename = datapath + "master\\tempOKExMaster_"+ today.date().isoformat() + ".txt"
+    masterfilename = datapath + "master\\OKExMaster_"+ today.date().isoformat() + ".txt"
     master = open(masterfilename,'w')
     
     insList = list()
@@ -74,7 +76,8 @@ if __name__ == "__main__":
      
     feedReceiver = OKExFeedReceiver.FeedReceiver()
     feedReceiver.Initialize()
-    
+    strtoday = today.date().isoformat()
+
     filename = datapath + "feed\\OKExFeed_" + today.date().isoformat() + ".log"
     f = open(filename,'w')
     
@@ -125,5 +128,9 @@ if __name__ == "__main__":
         
     print("Process Ending...")
     feedReceiver.Disconnect()
+    d = open(dateFile,'w')
+    d.write(strtoday)
+    d.flush()
+    d.close()
     sys.exit()
         
