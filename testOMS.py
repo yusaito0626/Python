@@ -90,10 +90,12 @@ if __name__ == "__main__":
     ordLogTh.start()
     
     oms.subscribeBalAndPos()
+    oms.subscribeOrders()
+    time.sleep(1)
     
     ins = insList["BTC-USDT"]
     
-    odr = oms.sendNewOrder(ins, OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 2,19500.0,"USDT")
+    odr = oms.sendNewOrder(ins, OKExEnums.tradeMode.CROSS, OKExEnums.side.BUY, OKExEnums.orderType.LIMIT, 0.01,20000.0,"USDT")
     time.sleep(1)
     oms.sendModOrder(ins, odr.clOrdId,1)
     time.sleep(1)

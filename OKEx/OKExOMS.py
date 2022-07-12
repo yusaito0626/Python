@@ -188,6 +188,10 @@ class OMS:
         args = "[{\"channel\":\"balance_and_position\"}]"
         self.__Subscribe(args)
         
+    def subscribeOrders(self):
+        args = "[{\"channel\":\"orders\",\"instType\":\"ANY\"}]"
+        self.__Subscribe(args)
+        
     def getId(self,instId):
         output = instId.replace('-','') + "{:06}".format(self.ordIndex)
         self.ordIndex += 1
@@ -298,6 +302,8 @@ class OMS:
         odr.status = OKExEnums.orderState.WAIT_NEW
         self.liveOrdList[odr.clOrdId] = odr
         self.ordList[odr.clOrdId] = odr
+        ins.liveOrdList[odr.clOrdId] = odr
+        ins.ordList[odr.clOrdId] = odr
         return odr
         
     def sendModOrder(self,ins,clOrdId,newSz=-1,newPx=-1):#sz,px < 0 means no change

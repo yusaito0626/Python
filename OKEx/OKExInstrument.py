@@ -777,6 +777,139 @@ class Board:
         if(self.booksBestAsk.px <= self.booksBestBid.px):
             print("Ask:" + str(self.booksBestAsk.px) + "  Bid:" + str(self.booksBestBid.px))
             #print(self.printBooks(20))
+            
+class position:
+    def __init__(self,obj=None):
+        if(obj==None):
+            self.instType = OKExEnums.instType.NONE
+            self.mgnMode = OKExEnums.mgnMode.NONE
+            self.posSide = OKExEnums.positionSide.NONE
+            self.pos = 0.0
+            self.baseBal = 0.0
+            self.quoteBal = 0.0
+            self.posCcy = ""
+            self.posId = ""
+            self.availPos = 0.0
+            self.avgPx = 0.0
+            self.upl = 0.0
+            self.uplRatio = 0.0
+            self.instId = ""
+            self.lever = 0.0
+            self.liqPx = 0.0
+            self.markPx = 0.0
+            self.imr = 0.0
+            self.margin = 0.0
+            self.mgnRatio = 0.0
+            self.mmr = 0.0
+            self.liab = 0.0
+            self.liabCcy = 0.0
+            self.interest = 0.0
+            self.tradeId = ""
+            self.notionalUsd = 0.0
+            self.optVal = 0.0
+            self.adl = 0
+            self.ccy = ""
+            self.last = 0.0
+            self.usdPx = 0.0
+            self.deltaBS = 0.0
+            self.deltaPA = 0.0 
+            self.gammaBS = 0.0
+            self.gammaPA = 0.0
+            self.thetaBS = 0.0
+            self.thetaPA = 0.0
+            self.vegaBS = 0.0
+            self.vegaPA = 0.0
+            self.cTime = 0
+            self.uTime = 0
+            self.pTime = 0
+        else:
+            self.setData(obj)
+            
+    def setData(self,pos):
+        self.instType = pos.instType
+        self.mgnMode = pos.mgnMode
+        self.posSide = pos.posSide
+        self.pos = pos.pos
+        self.baseBal = pos.baseBal
+        self.quoteBal = pos.quoteBal
+        self.posCcy = pos.posCcy
+        self.posId = pos.posId
+        self.availPos = pos.availPos
+        self.avgPx = pos.avgPx
+        self.upl = pos.upl
+        self.uplRatio = pos.uplRatio
+        self.instId = pos.instId
+        self.lever = pos.lever
+        self.liqPx = pos.liqPx
+        self.markPx = pos.markPx
+        self.imr = pos.imr
+        self.margin = pos.margin
+        self.mgnRatio = pos.mgnRatio
+        self.mmr = pos.mmr
+        self.liab = pos.liab
+        self.liabCcy = pos.liabCcy
+        self.interest = pos.interest
+        self.tradeId = pos.tradeId
+        self.notionalUsd = pos.notionalUsd 
+        self.optVal = pos.optVal
+        self.adl = pos.adl
+        self.ccy = pos.ccy
+        self.last = pos.last
+        self.usdPx = pos.usdPx
+        self.deltaBS = pos.deltaBS
+        self.deltaPA = pos.deltaPA 
+        self.gammaBS = pos.gammaBS
+        self.gammaPA = pos.gammaPA
+        self.thetaBS = pos.thetaBS
+        self.thetaPA = pos.thetaPA
+        self.vegaBS = pos.vegaBS
+        self.vegaPA = pos.vegaPA
+        self.cTime = pos.cTime
+        self.uTime = pos.uTime
+        self.pTime = pos.pTime
+        
+    def init(self):
+        self.instType = OKExEnums.instType.NONE
+        self.mgnMode = OKExEnums.mgnMode.NONE
+        self.posSide = OKExEnums.positionSide.NONE
+        self.netpos = 0.0
+        self.baseBal = 0.0
+        self.quoteBal = 0.0
+        self.posCcy = ""
+        self.posId = ""
+        self.availPos = 0.0
+        self.avgPx = 0.0
+        self.upl = 0.0
+        self.uplRatio = 0.0
+        self.instId = ""
+        self.lever = 0.0
+        self.liqPx = 0.0
+        self.markPx = 0.0
+        self.imr = 0.0
+        self.margin = 0.0
+        self.mgnRatio = 0.0
+        self.mmr = 0.0
+        self.liab = 0.0
+        self.liabCcy = 0.0
+        self.interest = 0.0
+        self.tradeId = ""
+        self.notionalUsd = 0.0
+        self.optVal = 0.0
+        self.adl = 0
+        self.ccy = ""
+        self.last = 0.0
+        self.usdPx = 0.0
+        self.deltaBS = 0.0
+        self.deltaPA = 0.0 
+        self.gammaBS = 0.0
+        self.gammaPA = 0.0
+        self.thetaBS = 0.0
+        self.thetaPA = 0.0
+        self.vegaBS = 0.0
+        self.vegaPA = 0.0
+        self.cTime = 0
+        self.uTime = 0
+        self.pTime = 0
 class Instrument:
     
     def __init__(self):
@@ -807,7 +940,17 @@ class Instrument:
         
         self.Books = Board()
         self.bookDepth = 2000
-        self.pos = 0.0
+        self.longPos = position()
+        self.shortPos = position()
+        self.netpos = 0.0#self.longPos.pos - self.shortPos.pos
+        
+        self.liveOrdList = {}#clOrdId,Order
+        self.ordList = {}#clOrdId,Order
+        
+        self.tradedQtyBuy = 0
+        self.tradedQtySell = 0
+        self.tradedAmtBuy = 0
+        self.tradedAmtSell = 0
         
         self.last = 0.0
         self.Mid = 0.0
@@ -832,15 +975,21 @@ class Instrument:
         self.startTimeSP = 0
         self.lastTimeSP= 0
         
+        self.buyOrders = {}#Price, Order
+        self.sellOrders = {}
+        self.lastAskPx = 0
+        self.lastBidPx = 0
+        self.lastMaxAskPx = 0
+        self.lastMinBidPx = 0
+        
         #From File
         self.histVolatility = 0.0
         self.histAvgSpread = 0
-        self.maxPos = 0
         
         self.minSp = 0
         self.topOfBook = 0.0
         self.skew = 0
-        self.maxVol = 0
+        self.maxPos = 0
         
         self.ringIdx = -1
         self.ringDataCount = 0
@@ -1033,7 +1182,7 @@ class Instrument:
                 count = 0
                 while(self.ts - self.lastRingUpdatedTime >= 1000):
                     self.lastRingUpdatedTime += 1000
-                    self.posRing[self.ringIdx].add(self.pos)
+                    self.posRing[self.ringIdx].add(self.netpos)
                     self.biRing[self.ringIdx].add(self.bookImbalance)
                     self.rvRing[self.ringIdx].add(self.realizedVolatility)
                     self.exeAskCRing[self.ringIdx].add(self.execAskCnt)
@@ -1065,9 +1214,50 @@ class Instrument:
                         break
                     
     def updateOrder(self,tkt):
-        i = 0
-    def updatePosition(self,msg):
-        i = 0
+        #Fill or Mod Ack or Can Ack
+        if(tkt.fillSz > 0):#Fill
+            odr = self.liveOrdList[tkt.clOrdId]
+            odr.filledSz += tkt.fillSz
+            odr.openSz -= tkt.fillSz
+            odr.avgPx = tkt.avgPx
+            odr.status = tkt.state
+            if(tkt.side == OKExEnums.side.BUY):
+                self.tradedQtyBuy += tkt.fillSz
+                self.tradedAmtBuy  += tkt.fillSz * tkt.fillPx
+            elif(tkt.side == OKExEnums.side.SELL):
+                self.tradedQtySell += tkt.fillSz
+                self.tradedAmtSell += tkt.fillSz * tkt.fillPx
+                
+            if(odr.openSz <= 0):
+                #odr.status = OKExEnums.orderState.FILLED
+                self.liveOrdList.pop(odr.clOrdId)
+        elif(tkt.amendResult != OKExEnums.amendResult.NONE):#Amend
+            if(tkt.amendResult == OKExEnums.amendResult.SUCCESS):
+                odr = self.liveOrdList[tkt.clOrdId]
+                odr.sz = tkt.sz
+                odr.openSz = odr.sz - odr.filledSz
+                odr.px = tkt.px
+                odr.status = tkt.state
+                if(odr.openSz <= 0):
+                    #odr.status = OKExEnums.orderState.FILLED
+                    self.liveOrdList.pop(odr.clOrdId)
+                #check if it's same as newPx and newSz?
+        elif(tkt.state == OKExEnums.orderState.CANCELED or tkt.state == OKExEnums.orderState.FILLED):#Cancelled
+            odr = self.liveOrdList.pop(odr.clOrdId)
+            odr.live = False
+            odr.sz = odr.fillSz
+            odr.status = tkt.state
+        elif(tkt.state == OKExEnums.orderState.LIVE):#New 
+            odr = self.liveOrdList[tkt.clOrdId]
+            odr.live = True
+            
+    def updatePosition(self,pos):
+        if(pos.posSide==OKExEnums.positionSide.LONG):
+            self.longPos.setData(pos)
+        elif(pos.posSide==OKExEnums.positionSide.SHORT):
+            self.shortPos.setData(pos)
+        self.netpos = self.longPos.pos - self.shortPos.pos
+        
     def ToString(self):
         outputline = self.instId + "," + str(self.instType) + "," \
                     + self.baseCcy + "," + self.quoteCcy + "," \
@@ -1081,7 +1271,7 @@ class Instrument:
                     + str(self.maxStopSz) + "," + str(self.maxTriggerSz) + "," \
                     + str(self.maxTwapSz) + "," + str(self.minSz) + "," \
                     + str(self.state) + "," + str(self.tickSz) + "," \
-                    + str(self.pos) + "," + str(self.Mid) + "," \
+                    + str(self.netpos) + "," + str(self.Mid) + "," \
                     + str(self.ts)
         return outputline
     def ToJsonString(self):

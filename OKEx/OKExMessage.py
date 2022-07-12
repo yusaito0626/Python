@@ -341,71 +341,284 @@ class dataBalandPos:
         return out
     
 class dataOrder:
-    def __init__(self):
-        self.instType = OKExEnums.instType.NONE
-        self.instId = ""
-        self.tgtCcy = OKExEnums.quantityType.NONE
-        self.ccy = ""
-        self.ordId = ""
-        self.clOrdId = ""
-        self.tag = ""
-        self.px = 0.0
-        self.sz = 0.0
-        self.notionalUsd = 0.0
-        self.ordType = OKExEnums.orderType.NONE
-        self.side = OKExEnums.side.NONE
-        self.posSide = OKExEnums.positionSide.NONE
-        self.tdMode = OKExEnums.tradeMode.NONE
-        self.fillPx = 0.0
-        self.tradeId = ""
-        self.fillSz = 0.0
-        self.fillTime = 0
-        self.fillFee = 0.0
-        self.fillFeeCcy = ""
-        self.execType = OKExEnums.execType.NONE
-        self.accFillSz = 0.0
-        self.fillNotionalUsd = 0.0
-        self.avgPx = 0.0
-        self.state = OKExEnums.orderState.NONE
-        self.lever = 0.0
-        self.tpTriggerPx = 0.0
-        self.tpTriggerPxType = OKExEnums.priceType.NONE
-        self.tpOrdPx = 0.0
-        self.slTriggerPx = 0.0
-        self.slTriggerPxType = OKExEnums.priceType.NONE
-        self.slOrdPx = 0.0
-        self.feeCcy = ""
-        self.fee = 0.0
-        self.rebateCcy = ""
-        self.rebate = 0.0
-        self.pnl = 0.0
-        self.source = ""
-        self.category = OKExEnums.category.NONE
-        self.uTime = 0
-        self.cTime = 0
-        self.reqId = ""
-        self.amendResult = OKExEnums.amendResult.NONE
-        self.code = 0
-        self.msg = ""
-    #algo order channel
-        self.algoId = ""
-        self.actualSz = 0.0
-        self.actualPx = 0.0
-        self.actualSide = ""
-        self.triggerTime = 0
-    #Advanced algo order channel
-        self.pxVar = 0.0
-        self.pxSpread = 0.0
-        self.szLimit = 0.0
-        self.pxLimit = 0.0
-        self.timeInterval = 0.0
-        self.count = 0
-        self.callbackRatio = 0.0
-        self.callbackSpread = 0.0
-        self.activePx = 0.0
-        self.moveTriggerPx = 0.0
-        self.pTime = 0
-    
+    def __init__(self,dic=None):
+        if(dic == None):
+            self.instType = OKExEnums.instType.NONE
+            self.instId = ""
+            self.tgtCcy = OKExEnums.quantityType.NONE
+            self.ccy = ""
+            self.ordId = ""
+            self.clOrdId = ""
+            self.tag = ""
+            self.px = 0.0
+            self.sz = 0.0
+            self.notionalUsd = 0.0
+            self.ordType = OKExEnums.orderType.NONE
+            self.side = OKExEnums.side.NONE
+            self.posSide = OKExEnums.positionSide.NONE
+            self.tdMode = OKExEnums.tradeMode.NONE
+            self.fillPx = 0.0
+            self.tradeId = ""
+            self.fillSz = 0.0
+            self.fillTime = 0
+            self.fillFee = 0.0
+            self.fillFeeCcy = ""
+            self.execType = OKExEnums.execType.NONE
+            self.accFillSz = 0.0
+            self.fillNotionalUsd = 0.0
+            self.avgPx = 0.0
+            self.state = OKExEnums.orderState.NONE
+            self.lever = 0.0
+            self.tpTriggerPx = 0.0
+            self.tpTriggerPxType = OKExEnums.priceType.NONE
+            self.tpOrdPx = 0.0
+            self.slTriggerPx = 0.0
+            self.slTriggerPxType = OKExEnums.priceType.NONE
+            self.slOrdPx = 0.0
+            self.feeCcy = ""
+            self.fee = 0.0
+            self.rebateCcy = ""
+            self.rebate = 0.0
+            self.pnl = 0.0
+            self.source = ""
+            self.category = OKExEnums.category.NONE
+            self.uTime = 0
+            self.cTime = 0
+            self.reqId = ""
+            self.amendResult = OKExEnums.amendResult.NONE
+            self.code = 0
+            self.msg = ""
+            #algo order channel
+            self.algoId = ""
+            self.actualSz = 0.0
+            self.actualPx = 0.0
+            self.actualSide = ""
+            self.triggerTime = 0
+            #Advanced algo order channel
+            self.pxVar = 0.0
+            self.pxSpread = 0.0
+            self.szLimit = 0.0
+            self.pxLimit = 0.0
+            self.timeInterval = 0.0
+            self.count = 0
+            self.callbackRatio = 0.0
+            self.callbackSpread = 0.0
+            self.activePx = 0.0
+            self.moveTriggerPx = 0.0
+            self.pTime = 0
+        else:
+            self.setData(dic)
+            
+    def setData(self,dic):
+        if(dic["instType"] == "SPOT"):
+            self.instType = OKExEnums.instType.SPOT
+        elif(dic["instType"] == "SWAP"):
+            self.instType = OKExEnums.instType.SWAP
+        elif(dic["instType"] == "FUTURES"):
+            self.instType = OKExEnums.instType.FUTURES
+        elif(dic["instType"] == "MARGIN"):
+            self.instType = OKExEnums.instType.MARGIN
+        elif(dic["instType"] == "OPTION"):
+            self.instType = OKExEnums.instType.OPTION
+        else:
+            self.instType = OKExEnums.instType.NONE
+            
+        self.instId = dic["instId"]
+        
+        if(dic["tgtCcy"] == "base_ccy"):
+            self.tgtCcy = OKExEnums.quantityType.BASE_CCY
+        elif(dic["tgtCcy"] == "quote_ccy"):
+            self.tgtCcy = OKExEnums.quantityType.QUOTE_CCY
+        else:
+            self.tgtCcy = OKExEnums.quantityType.NONE
+            
+        self.ccy = dic["ccy"]
+        self.ordId = dic["ordId"]
+        self.clOrdId = dic["clOrdId"]
+        self.tag = dic["tag"]
+        self.px = float(dic["px"])
+        self.sz = float(dic["sz"])
+        self.notionalUsd = float(dic["notionalUsd"])
+        
+        if(dic["ordType"]=="market"):
+            self.ordType = OKExEnums.orderType.MARKET
+        elif(dic["ordType"]=="limit"):
+            self.ordType = OKExEnums.orderType.LIMIT
+        elif(dic["ordType"]=="post_only"):
+            self.ordType = OKExEnums.orderType.POST_ONLY
+        elif(dic["ordType"]=="fok"):
+            self.ordType = OKExEnums.orderType.FOK
+        elif(dic["ordType"]=="ioc"):
+            self.ordType = OKExEnums.orderType.IOC
+        elif(dic["ordType"]=="optimal_limit_ioc"):
+            self.ordType = OKExEnums.orderType.OPTIMAL_LIMIT_IOC
+        else:
+            self.ordType = OKExEnums.orderType.NONE
+            
+        if(dic["side"]=="buy"):
+            self.side = OKExEnums.side.BUY
+        elif(dic["side"]=="sell"):
+            self.side = OKExEnums.side.SELL
+        else:
+            self.side = OKExEnums.side.NONE
+            
+        if(dic["posSide"]=="net"):
+            self.posSide = OKExEnums.positionSide.NET
+        elif(dic["posSide"]=="long"):
+            self.posSide = OKExEnums.positionSide.LONG
+        elif(dic["posSide"]=="short"):
+            self.posSide = OKExEnums.positionSide.SHORT
+        else:
+            self.posSide = OKExEnums.positionSide.NONE
+            
+        if(dic["tdMode"]=="cash"):
+            self.tdMode = OKExEnums.tradeMode.CASH
+        elif(dic["tdMode"]=="cross"):
+            self.tdMode = OKExEnums.tradeMode.CROSS
+        elif(dic["tdMode"]=="isolated"):
+            self.tdMode = OKExEnums.tradeMode.ISOLATED
+        else:
+            self.tdMode = OKExEnums.tradeMode.NONE
+            
+        self.fillPx = float(dic["fillPx"])
+        self.tradeId = dic["tradeId"]
+        self.fillSz = float(dic["fillSz"])
+        self.fillTime = int(dic["fillTime"])
+        self.fillFee = float(dic["fillFee"])
+        self.fillFeeCcy = dic["fillFeeCcy"]
+        
+        if(dic["execType"]=="M"):
+            self.execType = OKExEnums.execType.Maker
+        elif(dic["execType"]=="T"):
+            self.execType = OKExEnums.execType.Taker
+        else:
+            self.execType = OKExEnums.execType.NONE
+            
+        self.accFillSz = float(dic["accFillSz"])
+        self.fillNotionalUsd = float(dic["fillNotionalUsd"])
+        self.avgPx = float(dic["avgPx"])
+        
+        if(dic["state"]=="live"):
+            self.state = OKExEnums.orderState.LIVE
+        elif(dic["state"]=="partially_filled"):
+            self.state = OKExEnums.orderState.PARTIALLY_FILLED
+        elif(dic["state"]=="filled"):
+            self.state = OKExEnums.orderState.FILLED
+        elif(dic["state"]=="canceled"):
+            self.state = OKExEnums.orderState.CANCELED
+        else:
+            self.state = OKExEnums.orderState.NONE
+            
+        self.lever = float(dic["lever"])
+        
+        if(dic["tpTriggerPx"]!=""):
+            self.tpTriggerPx = float(dic["tpTriggerPx"])
+            
+        if(dic["tpTriggerPxType"]=="last"):
+            self.tpTriggerPxType = OKExEnums.priceType.LAST
+        elif(dic["tpTriggerPxType"]=="index"):
+            self.tpTriggerPxType = OKExEnums.priceType.INDEX
+        elif(dic["tpTriggerPxType"]=="market"):
+            self.tpTriggerPxType = OKExEnums.priceType.MARKET
+        else:
+            self.tpTriggerPxType = OKExEnums.priceType.NONE
+            
+        if(dic["tpOrdPx"]!=""): 
+            self.tpOrdPx = float(dic["tpOrdPx"])
+            
+        if(dic["slTriggerPx"]!=""):
+            self.slTriggerPx = float(dic["slTriggerPx"])
+            
+        if(dic["slTriggerPxType"]=="last"):
+            self.slTriggerPxType = OKExEnums.priceType.LAST
+        elif(dic["slTriggerPxType"]=="index"):
+            self.slTriggerPxType = OKExEnums.priceType.INDEX
+        elif(dic["slTriggerPxType"]=="market"):
+            self.slTriggerPxType = OKExEnums.priceType.MARKET
+        else:
+            self.slTriggerPxType = OKExEnums.priceType.NONE
+            
+        if(dic["slOrdPx"]!=""):
+            self.slOrdPx = float(dic["slOrdPx"])
+            
+        self.feeCcy = dic["feeCcy"]
+        self.fee = float(dic["fee"])
+        self.rebateCcy = dic["rebateCcy"]
+        
+        if(dic["rebate"]!=""):
+            self.rebate = float(dic["rebate"])
+            
+        self.pnl = float(dic["pnl"])
+        self.source = dic["source"]
+        
+        if(dic["category"]=="normal"):
+            self.category = OKExEnums.category.NORMAL
+        elif(dic["category"]=="twap"):
+            self.category = OKExEnums.category.TWAP
+        elif(dic["category"]=="adl"):
+            self.category = OKExEnums.category.ADL
+        elif(dic["category"]=="full_liquidation"):
+            self.category = OKExEnums.category.FULL_LIQUIDATION
+        elif(dic["category"]=="partial_liquidation"):
+            self.category = OKExEnums.category.PARTIAL_LIQUIDATION
+        elif(dic["category"]=="delivery"):
+            self.category = OKExEnums.category.DELIVERY
+        elif(dic["category"]=="ddh"):
+            self.category = OKExEnums.category.DDH
+        else:
+            self.category = OKExEnums.category.NONE
+            
+        self.uTime = int(dic["uTime"])
+        self.cTime = int(dic["cTime"])
+        self.reqId = dic["reqId"]
+        
+        if(dic["amendResult"]=="1"):
+            self.amendResult = OKExEnums.amendResult.AUTO_CANCEL
+        elif(dic["amendResult"]=="0"):
+            self.amendResult = OKExEnums.amendResult.SUCCESS
+        elif(dic["amendResult"]=="-1"):
+            self.amendResult = OKExEnums.amendResult.FAILURE
+        else:
+            self.amendResult = OKExEnums.amendResult.NONE
+            
+        self.code = int(dic["code"])
+        self.msg = dic["msg"]
+        
+        #algo order channel
+        if("algoId" in dic):
+            self.algoId = dic["algoId"]
+        if("actualSz" in dic):
+            self.actualSz = float(dic["actualSz"])
+        if("actualPx" in dic):
+            self.actualPx = float(dic["actualPx"])
+        if("actualSide" in dic):
+            self.actualSide = dic["actualSide"]
+        if("triggerTime" in dic):
+            self.triggerTime = int(dic["triggerTime"])
+        #Advanced algo order channel
+        if("pxVar" in dic):
+            self.pxVar = float(dic["pxVar"])
+        if("pxSpread" in dic):
+            self.pxSpread = float(dic["pxSpread"])
+        if("szLimit" in dic):
+            self.szLimit = float(dic["szLimit"])
+        if("pxLimit" in dic):
+            self.pxLimit = float(dic["pxLimit"])
+        if("timeInterval" in dic):
+            self.timeInterval = float(dic["timeInterval"])
+        if("count" in dic):
+            self.count = int(dic["count"])
+        if("callbackRatio" in dic):
+            self.callbackRatio = float(dic["callbackRatio"])
+        if("callbackSpread" in dic):
+            self.callbackSpread = float(dic["callbackSpread"])
+        if("activePx" in dic):
+            self.activePx = float(dic["activePx"])
+        if("moveTriggerPx" in dic):
+            self.moveTriggerPx = float(dic["moveTriggerPx"])
+        if("pTime" in dic):
+            self.pTime = int(dic["pTime"])
+            
 class dataLiquidationWarning:
     def __init__(self):
         self.instType = OKExEnums.instType.NONE
