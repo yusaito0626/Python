@@ -187,7 +187,9 @@ class OKExParser:
                 pData.data.append(obj)
             return pData
         elif(js["arg"]["channel"]=="orders"):
-            
+            for data in js["data"]:
+                obj = OKExMessage.dataOrder(data)
+                pData.data.append(obj)
             return pData
         elif(js["arg"]["channel"]=="orders-algo"):
         
@@ -356,4 +358,7 @@ class OKExParser:
                 self.tradePool.put(d)
         obj.init()
         self.pDataPool.put(obj)
-    
+
+
+
+parser = OKExParser()

@@ -287,8 +287,8 @@ class Board:
                     temppx += 1
     
     def reshapeBooks(self):
-        print("Reshaping books Current Best Price  Bid:" + str(self.booksBestBid.px) + "   Ask:" + str(self.booksBestAsk.px))
-        print("Current price range  min:" + str(self.minBid.px) + "   max:" + str(self.maxAsk.px))        
+        #print("Reshaping books Current Best Price  Bid:" + str(self.booksBestBid.px) + "   Ask:" + str(self.booksBestAsk.px))
+        #print("Current price range  min:" + str(self.minBid.px) + "   max:" + str(self.maxAsk.px))        
         numOfBids = self.booksBestBid.px - self.minBid.px
         numOfAsks = self.maxAsk.px - self.booksBestAsk.px
         numOfMovingObj = int((numOfBids - numOfAsks) / 2)
@@ -318,7 +318,7 @@ class Board:
                 prevpx -= 1
                 self.maxAsk = self.books[prevpx]
                 numOfMovingObj += 1
-        print("New price range  min:" + str(self.minBid.px) + "   max:" + str(self.maxAsk.px))
+        #print("New price range  min:" + str(self.minBid.px) + "   max:" + str(self.maxAsk.px))
     def initializeBoard(self,snapshot,depth):
         self.bids.clear()
         self.asks.clear()
@@ -589,7 +589,7 @@ class Board:
                 j += 1
             if((ask.next < 0 and i == depth) or j >= self.depth):
                 break
-        
+       
     def updateBooks(self,dataUpdate):    
         for data in dataUpdate.data:
             if(data.ts > self.ts):
@@ -612,20 +612,20 @@ class Board:
                             temp_bid = self.findBest(book.px, OKExEnums.side.BUY)
                             if(temp_bid != None):
                                 self.booksBestBid = temp_bid
-                            else:
-                                print("Couldn't find BestBid")
+                            #else:
+                               #print("Couldn't find BestBid")
                     else:
                         temp_bid = self.findBest(self.booksBestBid.px, OKExEnums.side.BUY)
                         if(temp_bid != None):
                             self.booksBestBid = temp_bid
-                        else:
-                            print("Couldn't find BestBid")
+                        #else:
+                            #print("Couldn't find BestBid")
                     if(orgSide != book.side and book.px >= self.booksBestBid.px):
                         temp_ask = self.findBest(self.booksBestAsk.px, OKExEnums.side.SELL)
                         if(temp_ask != None):
                             self.booksBestAsk = temp_ask
-                        else:
-                            print("Couldn't find BestAsk")
+                        #else:
+                            #print("Couldn't find BestAsk")
                             #print(self.printBooks(20))
                     if(self.booksBestBid.px -self.minBid.px < 2000):
                         self.reshapeBooks()
@@ -701,20 +701,20 @@ class Board:
                             temp_ask = self.findBest(book.px, OKExEnums.side.SELL)
                             if(temp_ask != None):
                                 self.booksBestAsk = temp_ask
-                            else:
-                                print("Couldn't find BestAsk")
+                            #else:
+                                #print("Couldn't find BestAsk")
                     else:
                         temp_ask = self.findBest(self.booksBestAsk.px, OKExEnums.side.SELL)
                         if(temp_ask != None):
                             self.booksBestAsk = temp_ask
-                        else:
-                            print("Couldn't find BestAsk")
+                        #else:
+                            #print("Couldn't find BestAsk")
                     if(orgSide != book.side and book.px <= self.booksBestAsk.px):
                         temp_bid = self.findBest(self.booksBestBid.px, OKExEnums.side.BUY)
                         if(temp_bid != None):
                             self.booksBestBid = temp_bid
-                        else:
-                            print("Couldn't find BestBid")
+                        #else:
+                            #print("Couldn't find BestBid")
                             #print(self.printBooks(20))
                     if(self.maxAsk.px - self.booksBestAsk.px < 2000):
                         self.reshapeBooks()
@@ -774,8 +774,8 @@ class Board:
                 #            newpx -= 1
                 #            i += 1
             #print(len(self.asks))
-        if(self.booksBestAsk.px <= self.booksBestBid.px):
-            print("Ask:" + str(self.booksBestAsk.px) + "  Bid:" + str(self.booksBestBid.px))
+        #if(self.booksBestAsk.px <= self.booksBestBid.px):
+            #print("Ask:" + str(self.booksBestAsk.px) + "  Bid:" + str(self.booksBestBid.px))
             #print(self.printBooks(20))
             
 class position:
@@ -910,6 +910,7 @@ class position:
         self.cTime = 0
         self.uTime = 0
         self.pTime = 0
+        
 class Instrument:
     
     def __init__(self):
@@ -938,6 +939,8 @@ class Instrument:
         self.state = OKExEnums.insState.NONE
         self.tickSz = 0#priceUnit should be 1 / tickSz
         
+        self.isTrading = False
+        
         self.Books = Board()
         self.bookDepth = 2000
         self.longPos = position()
@@ -956,6 +959,7 @@ class Instrument:
         self.Mid = 0.0
     
         self.ts = 0
+        self.lastOptTs = 0
     
         #Factors
         self.bookImbalance = 0.0
@@ -986,10 +990,13 @@ class Instrument:
         self.histVolatility = 0.0
         self.histAvgSpread = 0
         
+        #Param File
         self.minSp = 0
         self.topOfBook = 0.0
+        self.maxliveOrd = 0.0
+        self.maxPos = 0.0
+        self.ordInterval = 0
         self.skew = 0
-        self.maxPos = 0
         
         self.ringIdx = -1
         self.ringDataCount = 0
@@ -1092,17 +1099,18 @@ class Instrument:
         if(dict_info["tickSz"]!=""):
             self.tickSz = float(dict_info["tickSz"])
             self.Books.priceUnit = 1 / self.tickSz
-            
+    
+    def setParams(self,params):
+        #Symbol,minSp,ordSz,maxLiveOrd,maxPos
+        self.minSp = float(params[1])
+        self.topOfBook = float(params[2])
+        self.maxliveOrd = float(params[3])
+        self.maxPos = float(params[4])
+        self.ordInterval =  float(params[5])
+        
+        self.isTrading = True
+    
     def updateTrades(self,msg):
-        #print("Update Trades Called")
-        #self.instId = ""
-        #self.tradeId = ""
-        #self.px = 0.0
-        #self.sz = 0.0
-        #self.side = OKExEnums.side.NONE
-        #self.ts = 0
-        #msg = OKExMessage.pushData()
-        #print(msg.ToString())
         for d in msg.data:
             if(d.ts > self.ts):
                 self.ts = d.ts
@@ -1156,6 +1164,7 @@ class Instrument:
     
     def updateBooks(self,msg):#get pushData
         #msg = OKExMessage.pushData()
+        blOptimize = False
         if(msg.arg["channel"]=="books"):#snapshot or update
             for d in msg.data:
                 if(self.ts < d.ts):
@@ -1167,9 +1176,19 @@ class Instrument:
                     self.Books.instId = self.instId
                 elif(msg.arg["action"]=="update"):
                     self.Books.updateBooks(msg)
+                    blOptimize = True
         elif(msg.arg["channel"]=="trades"):
             self.updateTrades(msg)
-            
+        self.calcMid()
+        return blOptimize
+    
+    def calcMid(self):
+        if(self.Books.booksBestAsk.px > 0 and self.Books.booksBestBid.px > 0):
+            self.Mid = (self.Books.booksBestAsk.px + self.Books.booksBestBid.px) / 2
+        elif(self.Books.booksBestAsk.px > 0 and self.Books.booksBestBid.px <= 0):
+            self.Mid = self.Books.booksBestAsk.px
+        elif(self.Books.booksBestAsk.px <= 0 and self.Books.booksBestBid.px > 0):
+            self.Mid = self.Books.booksBestBid.px
     def updateRings(self):
         if(self.lastRingUpdatedTime == 0):
             if(self.ts > 0):
@@ -1216,11 +1235,8 @@ class Instrument:
     def updateOrder(self,tkt):
         #Fill or Mod Ack or Can Ack
         if(tkt.fillSz > 0):#Fill
-            odr = self.liveOrdList[tkt.clOrdId]
-            odr.filledSz += tkt.fillSz
-            odr.openSz -= tkt.fillSz
-            odr.avgPx = tkt.avgPx
-            odr.status = tkt.state
+            odr = self.ordList[tkt.clOrdId]
+            orgodr = odr.ToString()
             if(tkt.side == OKExEnums.side.BUY):
                 self.tradedQtyBuy += tkt.fillSz
                 self.tradedAmtBuy  += tkt.fillSz * tkt.fillPx
@@ -1228,36 +1244,152 @@ class Instrument:
                 self.tradedQtySell += tkt.fillSz
                 self.tradedAmtSell += tkt.fillSz * tkt.fillPx
                 
-            if(odr.openSz <= 0):
-                #odr.status = OKExEnums.orderState.FILLED
-                self.liveOrdList.pop(odr.clOrdId)
-        elif(tkt.amendResult != OKExEnums.amendResult.NONE):#Amend
-            if(tkt.amendResult == OKExEnums.amendResult.SUCCESS):
-                odr = self.liveOrdList[tkt.clOrdId]
-                odr.sz = tkt.sz
-                odr.openSz = odr.sz - odr.filledSz
-                odr.px = tkt.px
-                odr.status = tkt.state
-                if(odr.openSz <= 0):
-                    #odr.status = OKExEnums.orderState.FILLED
-                    self.liveOrdList.pop(odr.clOrdId)
-                #check if it's same as newPx and newSz?
-        elif(tkt.state == OKExEnums.orderState.CANCELED or tkt.state == OKExEnums.orderState.FILLED):#Cancelled
-            odr = self.liveOrdList.pop(odr.clOrdId)
-            odr.live = False
-            odr.sz = odr.fillSz
+            if(tkt.state == OKExEnums.orderState.FILLED):
+                if(odr.status != OKExEnums.orderState.FILLED and odr.status != OKExEnums.orderState.CANCELED):
+                    if(odr.clOrdId in self.liveOrdList.keys()):
+                        self.liveOrdList.pop(odr.clOrdId)
+                    else:
+                        print("Couldn't find the live order.")
+                        print(odr.ToString())
+                    if(tkt.side == OKExEnums.side.BUY):
+                        if(int(odr.px / self.tickSz) in self.buyOrders.keys()):
+                            self.buyOrders.pop(int(odr.px / self.tickSz))
+                        elif(odr.status != OKExEnums.orderState.WAIT_CAN):
+                            print("Counldn't find buy order. price:" + str(int(odr.px / self.tickSz)))
+                            print(odr.ToString())
+                            for o in self.buyOrders.values():
+                                print(o.ToString())
+                    elif(tkt.side == OKExEnums.side.SELL):
+                        if(int(odr.px / self.tickSz) in self.sellOrders.keys()):
+                            self.sellOrders.pop(int(odr.px / self.tickSz))
+                        elif(odr.status != OKExEnums.orderState.WAIT_CAN):
+                            print("Counldn't find sell order. price:" + str(int(odr.px / self.tickSz)))
+                            print(odr.ToString())
+                            for o in self.sellOrders.values():
+                                print(o.ToString())
+            odr.filledSz += tkt.fillSz
+            odr.openSz -= tkt.fillSz
+            odr.avgPx = tkt.avgPx
             odr.status = tkt.state
-        elif(tkt.state == OKExEnums.orderState.LIVE):#New 
-            odr = self.liveOrdList[tkt.clOrdId]
-            odr.live = True
+        #elif(tkt.state == OKExEnums.orderState.CANCELED \
+        #     or tkt.state == OKExEnums.orderState.FILLED):#Cancelled
+            #odr = self.liveOrdList.pop(tkt.clOrdId)
+            #odr.live = False
+            #odr.sz = odr.filledSz
+            #odr.status = tkt.state
+            #if(odr.side == OKExEnums.side.BUY):
+            #    if(int(odr.px / self.tickSz) in self.buyOrders.keys()):
+            #        self.buyOrders.pop(int(odr.px / self.tickSz))
+            #    else:
+            #        print("Coundln't find buy order. price:" + str(int(odr.px / self.tickSz)))
+            #        for o in self.buyOrders.values():
+            #            print(str(o.ToString()))
+            #elif(odr.side == OKExEnums.side.SELL):
+            #    if(int(odr.px / self.tickSz) in self.sellOrders.keys()):
+            #        self.sellOrders.pop(int(odr.px / self.tickSz))
+            #    else:
+            #        print("Coundln't find sell order. price:" + str(int(odr.px / self.tickSz)))
+            #        for o in self.sellOrders.values():
+            #            print(str(o.ToString()))
+        #elif(tkt.amendResult != OKExEnums.amendResult.NONE):#Amend
+        #    if(tkt.amendResult == OKExEnums.amendResult.SUCCESS):
+        #        odr = self.liveOrdList[tkt.clOrdId]
+        #        odr.sz = tkt.sz
+        #        odr.openSz = odr.sz - odr.filledSz
+        #        odr.status = tkt.state
+        #        odr.px = tkt.px
+        #        #check if it's same as newPx and newSz?
+        #elif(tkt.state == OKExEnums.orderState.LIVE):#New 
+        #    odr = self.liveOrdList[tkt.clOrdId]
+        #    odr.live = True
             
     def updatePosition(self,pos):
+        #print("updatePosition")
         if(pos.posSide==OKExEnums.positionSide.LONG):
             self.longPos.setData(pos)
         elif(pos.posSide==OKExEnums.positionSide.SHORT):
             self.shortPos.setData(pos)
         self.netpos = self.longPos.pos - self.shortPos.pos
+        #print("long:" + str(self.longPos.pos) + "   short:" + str(self.shortPos.pos) + "   net:" + str(self.netpos))
+    
+    def applyAckTkt(self,ack):    
+        if(ack.sCode==0):
+            odr = self.ordList[ack.clOrdId]
+            if(odr.status == OKExEnums.orderState.WAIT_NEW):
+                odr.status = OKExEnums.orderState.LIVE
+                odr.live = True
+            elif(odr.status == OKExEnums.orderState.WAIT_AMD):
+                odr.sz = odr.newSz
+                odr.openSz = odr.sz - odr.filledSz
+                if(odr.px != odr.newPx):
+                    if(odr.side == OKExEnums.side.BUY):
+                        if(int(odr.px / self.tickSz) in self.buyOrders):
+                            self.buyOrders.pop(int(odr.px / self.tickSz))
+                            if(odr.openSz > 0):
+                                self.buyOrders[int(odr.newPx / self.tickSz)] = odr
+                        else:
+                            print("Couldn't find buy order. price:" + str(odr.px))
+                    elif(odr.side == OKExEnums.side.SELL):
+                        if(int(odr.px / self.tickSz) in self.sellOrders):
+                            self.sellOrders.pop(int(odr.px / self.tickSz))
+                            if(odr.openSz > 0):
+                                self.sellOrders[int(odr.newPx / self.tickSz)] = odr
+                        else:
+                            print("Couldn't find sell order. price:" + str(odr.px))
+                elif(odr.openSz <= 0):
+                    if(odr.side == OKExEnums.side.BUY):
+                        if(int(odr.px / self.tickSz) in self.buyOrders):
+                            self.buyOrders.pop(int(odr.px / self.tickSz))
+                        else:
+                            print("Couldn't find buy order. price:" + str(odr.px))
+                    elif(odr.side == OKExEnums.side.SELL):
+                        if(int(odr.px / self.tickSz) in self.sellOrders):
+                            self.sellOrders.pop(int(odr.px / self.tickSz))
+                        else:
+                            print("Coudln't find sell order. price:" + str(odr.px))
+
+                odr.px = odr.newPx
+                if(odr.openSz <= 0):
+                    self.liveOrdList.pop(ack.clOrdId)
+                    odr.openSz = 0
+                    odr.live = False
+                    if(odr.filledSz > 0):
+                        odr.status = OKExEnums.orderState.FILLED
+                    else:
+                        odr.status = OKExEnums.orderState.CANCELED
+                else:
+                    if(odr.filledSz > 0):
+                        odr.status = OKExEnums.orderState.PARTIALLY_FILLED
+                    else:
+                        odr.status = OKExEnums.orderState.LIVE
+            elif(odr.status == OKExEnums.orderState.WAIT_CAN):
+                if(ack.clOrdId in self.liveOrdList.keys()):
+                    self.liveOrdList.pop(odr.clOrdId)
+                else:
+                    print("Couldn't find the live order.")
+                    print(odr.ToString())
+                odr.sz = odr.filledSz
+                odr.live = False
+                if(odr.filledSz > 0):
+                    odr.status = OKExEnums.orderState.FILLED
+                else:
+                    odr.status = OKExEnums.orderState.CANCELED
+                #if(odr.side == OKExEnums.side.BUY):
+                #    if(int(odr.px / self.tickSz) in self.buyOrders):
+                #        self.buyOrders.pop(int(odr.px / self.tickSz))
+                #    else:
+                #        print("Coudn't find buy order. price:" + str(odr.px))
+                #        for o in self.buyOrders.values():
+                #            print(o.ToString())
+                #elif(odr.side == OKExEnums.side.SELL):
+                #    if(int(odr.px / self.tickSz) in self.sellOrders):
+                #        self.sellOrders.pop(int(odr.px / self.tickSz))
+                #    else:
+                #        print("Coudn't find sell order. price:" + str(odr.px))
+                #        for o in self.sellOrders.values():
+                #            print(o.ToString())
         
+    
     def ToString(self):
         outputline = self.instId + "," + str(self.instType) + "," \
                     + self.baseCcy + "," + self.quoteCcy + "," \
@@ -1274,7 +1406,9 @@ class Instrument:
                     + str(self.netpos) + "," + str(self.Mid) + "," \
                     + str(self.ts)
         return outputline
-    def ToJsonString(self):
-        outputline = "" 
-    def ToJson(self):
-        line = self.ToJsonString()
+    
+    def printLiveOrders(self):
+        line = self.instId + "\n"
+        for o in self.liveOrdList.values():
+            line += o.ToString() + "\n"
+        return line

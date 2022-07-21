@@ -22,7 +22,7 @@ if __name__ == "__main__":
     datapath = "D:\\OKExFeed\\"
     dateFile = datapath + "date.txt"
     
-    logPath = "D:\\OKExFeed\\histData.log"
+    logPath = "D:\\OKExFeed\\log\\histData.log"
     lf = open(logPath,'w')
     
     d = open(dateFile,'r')

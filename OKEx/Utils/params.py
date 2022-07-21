@@ -12,3 +12,9 @@ biTicks = 100
 biDecayingParam = 2000
 
 latency = 100
+
+
+#File Names
+
+OMSKeyFileName = ""
+insParamFileName = ""

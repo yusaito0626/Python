@@ -102,7 +102,7 @@ class ackTicket:
         self.reqId = ""
     
     def ToString(self):
-        return self.ordId + "," + self.clOrderId + "," + self.tag \
+        return self.ordId + "," + self.clOrdId + "," + self.tag \
                 + "," + str(self.sCode) + "," + self.sMsg + "," + self.reqId
 
 class msgOrder:
@@ -479,12 +479,18 @@ class dataOrder:
             self.tdMode = OKExEnums.tradeMode.ISOLATED
         else:
             self.tdMode = OKExEnums.tradeMode.NONE
+        
+        if(dic["fillPx"]!=""):
+            self.fillPx = float(dic["fillPx"])
             
-        self.fillPx = float(dic["fillPx"])
         self.tradeId = dic["tradeId"]
-        self.fillSz = float(dic["fillSz"])
-        self.fillTime = int(dic["fillTime"])
-        self.fillFee = float(dic["fillFee"])
+        if(dic["fillSz"]!=""):
+            self.fillSz = float(dic["fillSz"])
+        
+        if(dic["fillTime"]!=""):
+            self.fillTime = int(dic["fillTime"])
+        if(dic["fillFee"]!=""):
+            self.fillFee = float(dic["fillFee"])
         self.fillFeeCcy = dic["fillFeeCcy"]
         
         if(dic["execType"]=="M"):
@@ -493,10 +499,15 @@ class dataOrder:
             self.execType = OKExEnums.execType.Taker
         else:
             self.execType = OKExEnums.execType.NONE
+        
+        if(dic["accFillSz"]!=""):
+            self.accFillSz = float(dic["accFillSz"])
             
-        self.accFillSz = float(dic["accFillSz"])
-        self.fillNotionalUsd = float(dic["fillNotionalUsd"])
-        self.avgPx = float(dic["avgPx"])
+        if(dic["fillNotionalUsd"]!=""):
+            self.fillNotionalUsd = float(dic["fillNotionalUsd"])
+            
+        if(dic["avgPx"]!=""):
+            self.avgPx = float(dic["avgPx"])
         
         if(dic["state"]=="live"):
             self.state = OKExEnums.orderState.LIVE
@@ -508,8 +519,9 @@ class dataOrder:
             self.state = OKExEnums.orderState.CANCELED
         else:
             self.state = OKExEnums.orderState.NONE
-            
-        self.lever = float(dic["lever"])
+        
+        if(dic["lever"]!=""):
+            self.lever = float(dic["lever"])
         
         if(dic["tpTriggerPx"]!=""):
             self.tpTriggerPx = float(dic["tpTriggerPx"])
@@ -542,13 +554,15 @@ class dataOrder:
             self.slOrdPx = float(dic["slOrdPx"])
             
         self.feeCcy = dic["feeCcy"]
-        self.fee = float(dic["fee"])
+        if(dic["fee"]!=""):
+            self.fee = float(dic["fee"])
         self.rebateCcy = dic["rebateCcy"]
         
         if(dic["rebate"]!=""):
             self.rebate = float(dic["rebate"])
             
-        self.pnl = float(dic["pnl"])
+        if(dic["pnl"]!=""):
+            self.pnl = float(dic["pnl"])
         self.source = dic["source"]
         
         if(dic["category"]=="normal"):

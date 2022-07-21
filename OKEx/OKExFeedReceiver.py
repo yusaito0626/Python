@@ -9,32 +9,44 @@ import websocket
 import queue
 import threading
 import requests
+import time
 
 import OKExInstrument
 import OKExParser
+import OKExOptimizer
+import OKExOMS
 
 class FeedReceiver:
     __FeedReceiver = websocket.WebSocket()
     __url=""
     isListening = False
+    stopPing = False
     
     feedQueue = queue.Queue()
     
     insList = {}
     
+    def sendPing(self,sec):
+        while(True):
+            time.sleep(sec)
+            if(self.stopPing):
+                self.stopPing = False
+                break
+            self.__FeedReceiver.send("ping")
+    
     def ListeningFeed(self):
-        print("ListeningFeed Thread started.")
+        print("[FeedReceiver] ListeningFeed Thread started.")
         try:
             while True:
                 msg = self.__FeedReceiver.recv()
                 if(msg==""):#websocket has been closed
-                    print("Connection Closed.")
+                    print("[FeedReceiver] Connection Closed.")
                     self.isListening = False
                     break
                 else:
                     self.feedQueue.put(msg)
         except:
-            print("Error Occured. Return ERROR text.")
+            print("[FeedReceiver] Error Occured. Return ERROR text.")
             self.feedQueue.put("ERROR")
             self.isListening = False
             
@@ -43,14 +55,34 @@ class FeedReceiver:
             line = self.recv()
             if(line=="ERROR"):
                 break
-            if(line!=""):
+            if(line!="" and '{' in line and '}' in line):
                 obj = parser.Parse(line)
                 if(obj.dataType=="push"):
                     if(obj.arg["instId"] in self.insList):
                         ins = self.insList[obj.arg["instId"]]
-                        ins.updateBooks(obj)
+                        blOptimize = ins.updateBooks(obj)
                         optimizer.calcFactors(ins)
+                        if(blOptimize):
+                            optimizer.Optimize(ins)
                 parser.pushPDataObj(obj)
+    
+    def updatingBoardSingle(self):
+        while(True):
+            line = self.recv()
+            if(line=="ERROR"):
+                break
+            if(line!="" and '{' in line and '}' in line):
+                obj = OKExParser.parser.Parse(line)
+                if(obj.dataType=="push"):
+                    if(obj.arg["instId"] in self.insList):
+                        ins = self.insList[obj.arg["instId"]]
+                        blOptimize = ins.updateBooks(obj)
+                        OKExOMS.oms.updatingOrdersSingle()
+                        OKExOptimizer.optimizer.calcFactors(ins)
+                        if(blOptimize):
+                            OKExOptimizer.optimizer.Optimize(ins)
+                OKExParser.parser.pushPDataObj(obj)
+    
     
     def Initialize(self):
         self.ListeningFeedTh = threading.Thread(target=self.ListeningFeed,args=())
@@ -59,10 +91,17 @@ class FeedReceiver:
         self.ListeningFeedTh = threading.Thread(target=self.ListeningFeed,args=())
         self.isListening = True
         self.ListeningFeedTh.start()
+        #self.sendPingTh = threading.Thread(target=self.sendPing,args=(20,))
+        #self.sendPingTh.start()
         
     def startUpdatingBoardTh(self,parser,optimizer):
         self.updatingBoardTh = threading.Thread(target=self.updatingBoard,args=(parser,optimizer))
         self.updatingBoardTh.start()
+
+    def startUpdatingBoardSingleTh(self):
+        self.updatingBoardTh = threading.Thread(target=self.updatingBoardSingle,args=())
+        self.updatingBoardTh.start()
+
         
     def SetParam(self,url):
         self.__url = url
@@ -155,4 +194,9 @@ class FeedReceiver:
         #End of for uly in ulyList:
         return self.insList
     #End of def getInstrmentList(self,ulyList):
+
+        
+
+
+feedReceiver = FeedReceiver()
  
